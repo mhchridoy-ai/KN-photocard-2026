@@ -23,7 +23,7 @@
         }
         @font-face {
             font-family: 'UN Bangla';
-            src: url('https://github.com/mhchridoy-ai/KN-photocard-2026/blob/main/UNBangla-Regular.ttf') format('truetype');
+            src: url('https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/UNBangla-Regular.ttf') format('truetype');
             font-display: swap;
         }
 
@@ -44,6 +44,7 @@
             background-color: var(--bg-color);
             color: #334155;
             padding: 20px;
+            touch-action: manipulation;
         }
 
         .app-container {
@@ -57,13 +58,14 @@
         /* Controls Panel */
         .controls-panel {
             flex: 1;
-            min-width: 340px;
+            min-width: 320px;
             background: #ffffff;
             padding: 24px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             max-height: 92vh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .panel-title {
@@ -110,6 +112,7 @@
             border-radius: 6px;
             font-size: 10pt;
             background: #fff;
+            touch-action: manipulation;
         }
 
         /* Toolbar with Font Sizing & Alignment */
@@ -232,6 +235,10 @@
             font-weight: 600;
         }
 
+        .slider-group input[type="range"] {
+            touch-action: pan-x;
+        }
+
         .color-presets {
             display: flex;
             gap: 8px;
@@ -280,13 +287,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
         }
 
-        /* 1:1 SQUARE CARD FRAME (550px x 550px) */
+        /* 1:1 SQUARE CARD FRAME (550px x 550px responsive) */
         .card-frame {
             position: relative;
-            width: 550px;
-            height: 550px;
+            width: 100%;
+            max-width: 550px;
+            aspect-ratio: 1 / 1;
             background-color: #0f172a;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
@@ -316,14 +325,12 @@
             transition: all 0.2s ease;
         }
 
-        /* Logo Visibility Options Classes */
         .logo-style-none {
             filter: none !important;
             background: transparent !important;
             padding: 0 !important;
         }
 
-        /* Modified Smart Adaptive Drop Shadow (Black & White combo shadow) */
         .logo-style-drop-shadow {
             filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.9)) drop-shadow(0px 3px 8px rgba(0, 0, 0, 0.85)) !important;
         }
@@ -340,7 +347,6 @@
             backdrop-filter: blur(2px);
         }
 
-        /* Top Backdrop Gradient Overlay for Logo Visibility */
         .logo-backdrop-overlay {
             position: absolute;
             top: 0;
@@ -353,11 +359,13 @@
             display: none;
         }
 
-        /* Image Box with 16:9 Aspect Ratio cropping */
+        /* Image Box with strict 16:9 Aspect Ratio */
         .card-image-box {
             position: relative;
             overflow: hidden;
             width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
         }
 
         .card-image-layer {
@@ -367,7 +375,7 @@
             width: 100%;
             height: 100%;
             cursor: grab;
-            transform-origin: center center;
+            touch-action: none;
         }
 
         .card-image-layer:active {
@@ -382,13 +390,17 @@
             object-fit: cover;
             top: 0;
             left: 0;
+            transform-origin: center center;
+            will-change: transform;
         }
 
         /* TEMPLATE 1: Full Fade */
         .tpl-fade .card-image-box {
             position: absolute;
             inset: 0;
+            width: 100%;
             height: 100%;
+            aspect-ratio: auto;
         }
 
         .tpl-fade .card-overlay {
@@ -420,17 +432,9 @@
             display: none;
         }
 
-        .tpl-split169 .card-image-box {
-            position: relative;
-            width: 100%;
-            height: 309.375px;
-            background: #000000;
-            z-index: 1;
-        }
-
         .tpl-split169 .card-body {
             position: relative;
-            padding: 28px 30px 22px 30px;
+            padding: 24px 28px 20px 28px;
             z-index: 3;
             color: #ffffff;
             flex: 1;
@@ -444,17 +448,9 @@
             display: none;
         }
 
-        .tpl-modern .card-image-box {
-            position: relative;
-            width: 100%;
-            height: 309.375px;
-            background: #000000;
-            z-index: 1;
-        }
-
         .tpl-modern .card-body {
             position: relative;
-            padding: 28px 30px 22px 30px;
+            padding: 24px 28px 20px 28px;
             z-index: 3;
             color: #ffffff;
             flex: 1;
@@ -480,10 +476,11 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid rgba(255,255,255,0.25);
-            padding-top: 12px;
-            margin-top: 12px;
+            padding-top: 10px;
+            margin-top: 10px;
             font-size: 11pt;
             color: rgba(255,255,255,0.9);
+            width: 100%;
         }
 
         #card-date-out {
@@ -514,17 +511,24 @@
         }
 
         @media (max-width: 950px) {
+            body {
+                padding: 10px;
+            }
             .app-container {
                 flex-direction: column;
+                gap: 15px;
+            }
+            .controls-panel {
+                max-height: none;
+                overflow-y: visible;
+                padding: 16px;
             }
             .card-frame {
                 width: 100%;
-                max-width: 450px;
-                height: 450px;
+                max-width: 100%;
             }
-            .tpl-split169 .card-image-box,
-            .tpl-modern .card-image-box {
-                height: 253px;
+            .card-headline {
+                font-size: 16pt;
             }
         }
     </style>
@@ -567,7 +571,7 @@
 
         <!-- Multi-Image Upload & Controls -->
         <div class="form-section">
-            <h3>২. ঘটনার ছবি (১৬:৯ অটো-ফিট ও ম্যানুয়াল ড্রাগ)</h3>
+            <h3>২. ঘটনার ছবি (১৬:৯ অটো-ফিট, পিন্চ-জুম ও স্ন্যাপিং)</h3>
             <div class="form-group">
                 <input type="file" id="img-input" accept="image/*" multiple onchange="handleMultipleImagesUpload(event)">
             </div>
@@ -577,9 +581,9 @@
             <div id="img-controls" style="display: none;">
                 <div class="form-group slider-group">
                     <label>জুম (Zoom):</label>
-                    <input type="range" id="zoom-slider" min="0.5" max="3" step="0.05" value="1" oninput="updateImageTransform()">
+                    <input type="range" id="zoom-slider" min="0.5" max="3" step="0.02" value="1" oninput="updateImageTransformFromSlider()">
                 </div>
-                <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 12px;">* ১৬:৯ ফ্রেমে ছবি অটো-ক্রপ হয়ে পারফেক্টলি বসবে। মাউস/আঙুল দিয়ে টেনে পজিশন অ্যাডজাস্ট করুন।</p>
+                <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 12px;">* ছবি ১৬:৯ ফ্রেমে অটো-ফিট হয়ে বসবে। ২ আঙুলে পিন্চ-জুম এবং ১ আঙুলে টেনে সরান। সেন্টারে ও এজে গেলে অটো-স্ন্যাপ হবে।</p>
 
                 <h4 style="font-size: 9.5pt; color: #334155; margin-bottom: 8px;">বেসিক ফটো এডিটিং ও কালার টোন:</h4>
                 <div class="slider-group">
@@ -639,10 +643,10 @@
             <div class="form-group">
                 <label>ফন্ট নির্বাচন করুন:</label>
                 <select id="font-family-select" onchange="changeFontFamily(this.value)">
-                    <option value="'Kalpurush', sans-serif" selected>Kalpurush (কালপুরুষ)</option>
-                    <option value="'July', sans-serif">July (জুলাই)</option>
-                    <option value="'UN Bangla', sans-serif">UN Bangla (ইউএন বাংলা)</option>
                     <option value="'Noto Serif Bengali', serif">Noto Serif Bengali</option>
+                      <option value="'July', sans-serif">July (জুলাই)</option>
+                    <option value="'Kalpurush', sans-serif" selected>Kalpurush (কালপুরুষ)</option>
+                    <option value="'UN Bangla', sans-serif">UN Bangla (ইউএন বাংলা)</option>
                     <option value="'Inter', sans-serif">Inter (English)</option>
                 </select>
             </div>
@@ -736,10 +740,10 @@
 
 <script>
     const AVAILABLE_LOGOS = [
-        { id: 'karnafuli', label: 'Karnafuli News', url: 'https://github.com/mhchridoy-ai/KN-photocard-2026/blob/main/KN%20for%20card.png?raw=true' },
-        { id: 'deyang', label: 'Deyang', url: 'https://github.com/mhchridoy-ai/KN-photocard-2026/blob/main/Deyang%20for%20card.png?raw=true' },
-        { id: 'neosylheti', label: 'Neo Sylheti', url: 'https://github.com/mhchridoy-ai/KN-photocard-2026/blob/main/Sylheti%20for%20card.png?raw=true' },
-        { id: 'neobservers', label: 'New Era Observers', url: 'https://github.com/mhchridoy-ai/KN-photocard-2026/blob/main/NEO%20for%20card.png?raw=true' }
+        { id: 'karnafuli', label: 'Karnafuli News', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/KN%20for%20card.png' },
+        { id: 'deyang', label: 'Deyang', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/Deyang%20for%20card.png' },
+        { id: 'neosylheti', label: 'Neo Sylheti', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/Sylheti%20for%20card.png' },
+        { id: 'neobservers', label: 'New Era Observers', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/NEO%20for%20card.png' }
     ];
 
     let imagesList = [];
@@ -758,12 +762,18 @@
         startY: 0
     };
 
+    let touchState = {
+        initialDist: 0,
+        initialScale: 1,
+        isPinching: false
+    };
+
     let customFonts = [];
 
     window.onload = function() {
         populateLogoDropdown();
         loadSavedData();
-        setupDragEvents();
+        setupDragAndPinchEvents();
         onHeadlineChange();
     };
 
@@ -777,22 +787,40 @@
             logoSelect.appendChild(opt);
         });
         if (AVAILABLE_LOGOS.length > 0) {
-            document.getElementById('brand-logo').src = AVAILABLE_LOGOS[0].url;
+            setLogoUrl(AVAILABLE_LOGOS[0].url);
         }
     }
 
+    function setLogoUrl(url) {
+        const img = document.getElementById('brand-logo');
+        fetchAsDataURL(url).then(dataUrl => {
+            img.src = dataUrl;
+        }).catch(() => {
+            img.src = url;
+        });
+    }
+
+    function fetchAsDataURL(url) {
+        return fetch(url)
+            .then(res => res.blob())
+            .then(blob => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            }));
+    }
+
     function onLogoSelectChange(url) {
-        document.getElementById('brand-logo').src = url;
+        setLogoUrl(url);
         saveAndSync();
     }
 
-    /* Change Logo Visibility Style */
     function changeLogoVisibility(style) {
         const header = document.getElementById('card-header');
         const logo = document.getElementById('brand-logo');
         const backdrop = document.getElementById('logo-backdrop');
 
-        // Reset classes
         header.className = 'card-header';
         logo.className = 'card-logo';
         backdrop.style.display = 'none';
@@ -951,6 +979,7 @@
         img.src = imagesList[index];
         img.style.display = 'block';
 
+        // Reset transform state on selecting image for perfect 16:9 auto-fit
         imgState.scale = 1;
         imgState.posX = 0;
         imgState.posY = 0;
@@ -996,14 +1025,51 @@
         applyPhotoFilters();
     }
 
-    function updateImageTransform() {
+    function updateImageTransformFromSlider() {
         if (activeImgIndex === -1) return;
         imgState.scale = parseFloat(document.getElementById('zoom-slider').value);
-        const img = document.getElementById('card-img');
-        img.style.transform = `translate(${imgState.posX}px, ${imgState.posY}px) scale(${imgState.scale})`;
+        updateImageTransform();
     }
 
-    function setupDragEvents() {
+    function updateImageTransform() {
+        if (activeImgIndex === -1) return;
+        const img = document.getElementById('card-img');
+        img.style.transform = `translate3d(${imgState.posX}px, ${imgState.posY}px, 0px) scale(${imgState.scale})`;
+    }
+
+    /* Snapping Logic: Snaps image to Center and Frame Edges */
+    function applySnapping(x, y) {
+        const threshold = 12; // Snap radius in px
+        let snappedX = x;
+        let snappedY = y;
+
+        // Center Snapping
+        if (Math.abs(x) < threshold) snappedX = 0;
+        if (Math.abs(y) < threshold) snappedY = 0;
+
+        // Edge Snapping
+        const box = document.getElementById('image-box');
+        if (box) {
+            const boxW = box.clientWidth;
+            const boxH = box.clientHeight;
+            const scaledW = boxW * imgState.scale;
+            const scaledH = boxH * imgState.scale;
+
+            const maxOffsetX = Math.max(0, (scaledW - boxW) / 2);
+            const maxOffsetY = Math.max(0, (scaledH - boxH) / 2);
+
+            if (Math.abs(x - maxOffsetX) < threshold) snappedX = maxOffsetX;
+            if (Math.abs(x - (-maxOffsetX)) < threshold) snappedX = -maxOffsetX;
+
+            if (Math.abs(y - maxOffsetY) < threshold) snappedY = maxOffsetY;
+            if (Math.abs(y - (-maxOffsetY)) < threshold) snappedY = -maxOffsetY;
+        }
+
+        return { x: snappedX, y: snappedY };
+    }
+
+    /* Touch & Drag Handling with Pinch-Zoom and Snapping */
+    function setupDragAndPinchEvents() {
         const layer = document.getElementById('image-layer');
 
         const startDrag = (x, y) => {
@@ -1015,24 +1081,68 @@
 
         const doDrag = (x, y) => {
             if (!imgState.isDragging) return;
-            imgState.posX = x - imgState.startX;
-            imgState.posY = y - imgState.startY;
+            let rawX = x - imgState.startX;
+            let rawY = y - imgState.startY;
+
+            const snapped = applySnapping(rawX, rawY);
+            imgState.posX = snapped.x;
+            imgState.posY = snapped.y;
+
             updateImageTransform();
         };
 
         const stopDrag = () => { imgState.isDragging = false; };
 
+        // Mouse Events for Desktop
         layer.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
         window.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
         window.addEventListener('mouseup', stopDrag);
 
+        // Touch Events for Mobile (Single Touch Drag + Pinch Zoom)
         layer.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY);
+            if (activeImgIndex === -1) return;
+
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                touchState.isPinching = true;
+                touchState.initialDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                touchState.initialScale = imgState.scale;
+            } else if (e.touches.length === 1 && !touchState.isPinching) {
+                startDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        layer.addEventListener('touchmove', (e) => {
+            if (activeImgIndex === -1) return;
+
+            if (e.touches.length === 2 && touchState.isPinching) {
+                e.preventDefault();
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                if (touchState.initialDist > 0) {
+                    let newScale = touchState.initialScale * (dist / touchState.initialDist);
+                    newScale = Math.min(Math.max(newScale, 0.5), 3.5);
+                    imgState.scale = newScale;
+                    document.getElementById('zoom-slider').value = newScale;
+                    updateImageTransform();
+                }
+            } else if (e.touches.length === 1 && !touchState.isPinching && imgState.isDragging) {
+                e.preventDefault();
+                doDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        layer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                touchState.isPinching = false;
+            }
+            stopDrag();
         });
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 1) doDrag(e.touches[0].clientX, e.touches[0].clientY);
-        });
-        window.addEventListener('touchend', stopDrag);
     }
 
     function setTextAlign(align) {
@@ -1175,8 +1285,6 @@
         document.getElementById('card-username-out').innerText = finalUsername;
 
         const logoUrl = document.getElementById('logo-select').value;
-        document.getElementById('brand-logo').src = logoUrl;
-
         const currentFont = document.getElementById('font-family-select').value;
         const logoVisibility = document.getElementById('logo-visibility-select').value;
 
@@ -1198,11 +1306,11 @@
             activeImgIndex: activeImgIndex
         };
 
-        localStorage.setItem('karnafuli_photocard_v10', JSON.stringify(saveData));
+        localStorage.setItem('karnafuli_photocard_v11', JSON.stringify(saveData));
     }
 
     function loadSavedData() {
-        const saved = localStorage.getItem('karnafuli_photocard_v10');
+        const saved = localStorage.getItem('karnafuli_photocard_v11');
         if (!saved) return;
 
         try {
@@ -1234,7 +1342,7 @@
             }
             if (data.logoUrl) {
                 document.getElementById('logo-select').value = data.logoUrl;
-                document.getElementById('brand-logo').src = data.logoUrl;
+                setLogoUrl(data.logoUrl);
             }
             if (data.logoVisibility) {
                 document.getElementById('logo-visibility-select').value = data.logoVisibility;
@@ -1276,24 +1384,37 @@
         }
     }
 
-    function downloadPhotoCard() {
+    async function downloadPhotoCard() {
         const cardNode = document.getElementById('photo-card');
+        
+        // Ensure web fonts are completely loaded before capturing
+        if (document.fonts) {
+            await document.fonts.ready;
+        }
+
         const originalWidth = cardNode.offsetWidth;
         const targetScale = 2560 / originalWidth;
 
-        html2canvas(cardNode, {
-            scale: targetScale,
-            useCORS: true,
-            allowTaint: true,
-            width: originalWidth,
-            height: originalWidth
-        }).then(canvas => {
+        try {
+            const canvas = await html2canvas(cardNode, {
+                scale: targetScale,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                width: originalWidth,
+                height: originalWidth
+            });
+
             const link = document.createElement('a');
             link.download = `Karnafuli_News_${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
-        });
+        } catch (err) {
+            alert('কার্ড প্রস্তুত করতে সমস্যা হয়েছে: ' + err.message);
+        }
     }
 </script>
 </body>
 </html>
+
+/MHC
