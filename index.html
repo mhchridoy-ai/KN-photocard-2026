@@ -508,6 +508,7 @@
             text-align: left;
             width: 100%;
             transform-origin: top left;
+            margin: 0 auto;
         }
 
         .card-footer {
@@ -651,22 +652,22 @@
         <div class="form-section">
             <h3>৩. হেডলাইন, অ্যালাইনমেন্ট ও স্পেসিং</h3>
             <div class="editor-toolbar">
-                <button class="toolbar-btn" onclick="setTextAlign('left')" title="বামপাশে এলাইন (Left)">Left</button>
-                <button class="toolbar-btn" onclick="setTextAlign('center')" title="মাঝখানে এলাইন (Center)">Center</button>
-                <button class="toolbar-btn" onclick="setTextAlign('right')" title="ডানপাশে এলাইন (Right)">Right</button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('left')" title="বামপাশে এলাইন (Left)">Left</button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('center')" title="মাঝখানে এলাইন (Center)">Center</button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('right')" title="ডানপাশে এলাইন (Right)">Right</button>
                 <span style="border-right: 1px solid #cbd5e1; height: 20px; margin: 0 2px;"></span>
 
-                <button class="toolbar-btn" onclick="formatDoc('bold')" title="বোল্ড"><b>B</b></button>
-                <button class="toolbar-btn" onclick="formatDoc('italic')" title="ইটালিক"><i>I</i></button>
-                <button class="toolbar-btn" onclick="formatDoc('underline')" title="আন্ডারলাইন"><u>U</u></button>
-                <button class="toolbar-btn" onclick="formatDoc('removeFormat')" title="ফরম্যাট ক্লিয়ার">Tx</button>
-                <input type="color" id="text-color" value="#ffffff" onchange="applyTextColor(this.value)" title="সিলেক্টেড অংশের টেক্সট কালার" style="width:30px; height:28px; cursor:pointer;">
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('bold')" title="বোল্ড"><b>B</b></button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('italic')" title="ইটালিক"><i>I</i></button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('underline')" title="আন্ডারলাইন"><u>U</u></button>
+                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')" title="ফরম্যাট ক্লিয়ার">Tx</button>
+                <input type="color" id="text-color" value="#ffffff" onmousedown="event.preventDefault()" onchange="applyTextColor(this.value)" title="সিলেক্টেড অংশের টেক্সট কালার" style="width:30px; height:28px; cursor:pointer;">
                 
                 <div class="font-size-control-box" title="ফন্ট সাইজ (সিলেক্টেড বা সম্পূর্ণ অংশ)">
-                    <button class="toolbar-btn" onclick="stepFontSize(-2)" style="padding: 2px 6px;">-</button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(-2)" style="padding: 2px 6px;">-</button>
                     <input type="number" id="font-size-num" value="22" min="1" onchange="applyCustomFontSize(this.value)">
                     <span style="font-size: 8pt; color: #64748b;">pt</span>
-                    <button class="toolbar-btn" onclick="stepFontSize(2)" style="padding: 2px 6px;">+</button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(2)" style="padding: 2px 6px;">+</button>
                 </div>
             </div>
 
@@ -783,6 +784,8 @@
 </div>
 
 <script>
+    const STORAGE_KEY = 'karnafuli_photocard_v12';
+
     const config = {
         isDynamic: true,
         glowRadius: '6px',
@@ -802,7 +805,6 @@
     let rawLogoDataUrl = '';
     let savedRange = null;
 
-    // Undo / Redo History Stack Variables
     let undoStack = [];
     let redoStack = [];
     let isPerformingUndoRedo = false;
@@ -851,6 +853,7 @@
         editor.addEventListener('keyup', storeSelection);
         editor.addEventListener('mouseup', storeSelection);
         editor.addEventListener('selectionchange', storeSelection);
+        editor.addEventListener('touchend', storeSelection);
     }
 
     async function preloadExternalFonts() {
@@ -1326,6 +1329,7 @@
         currentAlignment = align;
         document.getElementById('card-headline-out').style.textAlign = align;
         document.getElementById('headline-input').style.textAlign = align;
+        autoScaleHeadline();
         saveAndSync();
     }
 
@@ -1342,7 +1346,6 @@
     function applyCustomFontSize(sizeVal) {
         if (!sizeVal || sizeVal <= 0) return;
         const formattedSize = sizeVal + 'pt';
-        
         const editor = document.getElementById('headline-input');
 
         if (savedRange) {
@@ -1386,8 +1389,16 @@
         const wrapper = headlineOut ? headlineOut.closest('.card-headline-wrapper') : null;
         if (!headlineOut || !wrapper) return;
 
-        headlineOut.style.transform = 'scale(1)';
+        headlineOut.style.transform = 'none';
         headlineOut.style.width = '100%';
+
+        if (currentAlignment === 'center') {
+            headlineOut.style.transformOrigin = 'top center';
+        } else if (currentAlignment === 'right') {
+            headlineOut.style.transformOrigin = 'top right';
+        } else {
+            headlineOut.style.transformOrigin = 'top left';
+        }
 
         const baseSize = parseFloat(document.getElementById('font-size-num').value) || 22;
         headlineOut.style.fontSize = baseSize + 'pt';
@@ -1477,7 +1488,6 @@
         location.reload();
     }
 
-    /* Undo, Redo & Memory Reset Functions */
     function getCurrentStateSnapshot() {
         return {
             template: document.getElementById('template-select').value,
@@ -1499,6 +1509,8 @@
     }
 
     function saveAndSync() {
+        if (isPerformingUndoRedo) return;
+
         const dateVal = document.getElementById('in-date').value;
         const userSelectVal = document.getElementById('username-select').value;
         const customUserVal = document.getElementById('in-username-custom').value;
@@ -1515,19 +1527,16 @@
 
         const saveData = getCurrentStateSnapshot();
 
-        // Push to Undo Stack if not performing undo/redo programmatically
-        if (!isPerformingUndoRedo) {
-            const currentStateString = JSON.stringify(saveData);
-            const lastStateString = undoStack.length > 0 ? JSON.stringify(undoStack[undoStack.length - 1]) : null;
-            
-            if (currentStateString !== lastStateString) {
-                undoStack.push(saveData);
-                if (undoStack.length > 30) undoStack.shift(); // Limit max undo limit to 30 steps
-                redoStack = []; // Clear redo stack on new action
-            }
+        const currentStateString = JSON.stringify(saveData);
+        const lastStateString = undoStack.length > 0 ? JSON.stringify(undoStack[undoStack.length - 1]) : null;
+        
+        if (currentStateString !== lastStateString) {
+            undoStack.push(saveData);
+            if (undoStack.length > 30) undoStack.shift();
+            redoStack = [];
         }
 
-        localStorage.setItem('karnafuli_photocard_v11', JSON.stringify(saveData));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
     }
 
     function applyState(data) {
@@ -1590,7 +1599,7 @@
             changeFontFamily(data.fontFamily);
         }
 
-        localStorage.setItem('karnafuli_photocard_v11', JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         isPerformingUndoRedo = false;
     }
 
@@ -1617,14 +1626,15 @@
 
     function resetMemory() {
         if (confirm('আপনি কি নিশ্চিত যে সমস্ত মেমোরি রিসেট করে প্রথমবারের মতো ইনপুট ইন্টারফেইস খালি করতে চান?')) {
+            isPerformingUndoRedo = true;
+            localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem('karnafuli_photocard_v11');
+            
             undoStack = [];
             redoStack = [];
-            
-            // Reset to defaults
             imagesList = [];
             activeImgIndex = -1;
-            document.getElementById('headline-input.innerHTML') = '';
+
             document.getElementById('headline-input').innerHTML = '';
             document.getElementById('card-img').src = '';
             document.getElementById('card-img').style.display = 'none';
@@ -1644,7 +1654,7 @@
     }
 
     function loadSavedData() {
-        const saved = localStorage.getItem('karnafuli_photocard_v11');
+        const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) {
             undoStack.push(getCurrentStateSnapshot());
             return;
@@ -1691,4 +1701,4 @@
 </script>
 </body>
 </html>
-Developed by MHC Hridoy
+/Developed by MHC Hridoy
