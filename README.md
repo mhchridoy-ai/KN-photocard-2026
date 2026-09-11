@@ -1,2 +1,2 @@
 # KN-photocard-2026
-Karnafuli News Photocard
+Karnafuli News and NEO Photocard
