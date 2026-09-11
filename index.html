@@ -290,7 +290,7 @@
             width: 100%;
         }
 
-        /* 1:1 SQUARE CARD FRAME (550px x 550px responsive) */
+        /* 1:1 SQUARE CARD FRAME */
         .card-frame {
             position: relative;
             width: 100%;
@@ -305,7 +305,7 @@
             justify-content: space-between;
         }
 
-        /* Transparent Floating Logo Header */
+        /* Logo Header */
         .card-header {
             position: absolute;
             top: 3.6%;
@@ -339,11 +339,8 @@
         }
 
         .logo-style-drop-shadow {
-              filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.9)) drop-shadow(0px 3px 8px rgba(0, 0, 0, 0.85)) !important;
-
+            filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.9)) drop-shadow(0px 3px 8px rgba(0, 0, 0, 0.85)) !important;
         }
-
-
 
         .logo-style-solid-bg {
             background-color: #ffffff !important;
@@ -387,13 +384,14 @@
             display: none;
         }
 
-        /* Image Box with strict 16:9 Aspect Ratio Container */
+        /* Image Box - Strict 16:9 Aspect Ratio */
         .card-image-box {
             position: relative;
             overflow: hidden;
             width: 100%;
             aspect-ratio: 16 / 9;
             background-color: #000;
+            flex-shrink: 0;
         }
 
         .card-image-layer {
@@ -410,7 +408,6 @@
             cursor: grabbing;
         }
 
-        /* Updated to object-fit: contain to prevent auto-cropping */
         .card-image-layer img {
             position: absolute;
             pointer-events: none;
@@ -430,6 +427,7 @@
             width: 100%;
             height: 100%;
             aspect-ratio: auto;
+            flex-shrink: 1;
         }
 
         .tpl-fade .card-overlay {
@@ -445,12 +443,17 @@
             bottom: 0;
             left: 0;
             right: 0;
+            max-height: 55%;
             padding: 5.5% 5.5% 4.5% 5.5%;
             z-index: 3;
             color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
         }
 
-        /* TEMPLATE 2: 16:9 Split Centered */
+        /* TEMPLATE 2: 16:9 Split */
         .tpl-split169 {
             display: flex;
             flex-direction: column;
@@ -470,6 +473,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
 
         /* TEMPLATE 3: Modern Banner */
@@ -487,17 +491,23 @@
             flex-direction: column;
             justify-content: space-between;
             border-top: 4px solid var(--accent-color);
+            overflow: hidden;
         }
 
-        /* Card Elements */
+        /* Dynamic Fit Card Headline */
         .card-headline {
             font-family: 'Noto Serif Bengali', serif;
-            font-size: 22pt;
+            font-size: 26pt;
             line-height: 1.35;
             word-break: break-word;
             white-space: pre-wrap;
             text-align: left;
-            margin-top: 4px;
+            margin-top: 2px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .card-footer {
@@ -506,10 +516,11 @@
             align-items: center;
             border-top: 1px solid rgba(255,255,255,0.25);
             padding-top: 10px;
-            margin-top: 10px;
+            margin-top: 8px;
             font-size: 11pt;
             color: rgba(255,255,255,0.9);
             width: 100%;
+            flex-shrink: 0;
         }
 
         #card-date-out {
@@ -555,9 +566,6 @@
             .card-frame {
                 width: 100%;
                 max-width: 100%;
-            }
-            .card-headline {
-                font-size: 16pt;
             }
         }
     </style>
@@ -649,7 +657,7 @@
                 
                 <div class="font-size-control-box" title="ফন্ট সাইজ (সিলেক্টেড বা সম্পূর্ণ অংশ)">
                     <button class="toolbar-btn" onclick="stepFontSize(-2)" style="padding: 2px 6px;">-</button>
-                    <input type="number" id="font-size-num" value="22" min="1" onchange="applyCustomFontSize(this.value)">
+                    <input type="number" id="font-size-num" value="26" min="1" onchange="applyCustomFontSize(this.value)">
                     <span style="font-size: 8pt; color: #64748b;">pt</span>
                     <button class="toolbar-btn" onclick="stepFontSize(2)" style="padding: 2px 6px;">+</button>
                 </div>
@@ -700,8 +708,8 @@
             <div class="form-group" style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <label style="color: #0f172a; font-weight: 700;">লোগো ভিজিবিলিটি (দৃশ্যমানতা বৃদ্ধি):</label>
                 <select id="logo-visibility-select" onchange="changeLogoVisibility(this.value)">
-                    <option value="none" selected>None (Normal - বাই ডিফল্ট)</option>
-                    <option value="drop-shadow">Drop Shadow (ড্রপ শ্যাডো)</option>
+                    <option value="drop-shadow" selected>Drop Shadow (ড্রপ শ্যাডো - বাই ডিফল্ট)</option>
+                    <option value="none">None (Normal)</option>
                     <option value="solid-bg">Solid Background (সাদা ব্যাকগ্রাউন্ড বক্স)</option>
                     <option value="outline">Outline (বর্ডার / আউটলাইন)</option>
                     <option value="outer-glow">Outer Glow (ব্লু গ্লো ইফেক্ট)</option>
@@ -737,7 +745,7 @@
         </div>
 
         <!-- Export Action -->
-        <button class="btn-action btn-download" onclick="downloadPhotoCard()">২৫৬০×২৫৬০ PNG ডাউনলোড করুন</button>
+        <button class="btn-action btn-download" onclick="downloadPhotoCard()">Download the News Card</button>
     </div>
 
     <!-- Preview Panel -->
@@ -746,8 +754,8 @@
             
             <div class="logo-backdrop-overlay" id="logo-backdrop"></div>
 
-            <div class="card-header logo-style-none" id="card-header">
-                <img id="brand-logo" src="" alt="Logo" class="card-logo">
+            <div class="card-header" id="card-header">
+                <img id="brand-logo" src="" alt="Logo" class="card-logo logo-style-drop-shadow">
             </div>
 
             <div class="card-image-box" id="image-box">
@@ -775,7 +783,7 @@
         { id: 'karnafuli', label: 'Karnafuli News', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/KN%20for%20card.png' },
         { id: 'deyang', label: 'Deyang', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/Deyang%20for%20card.png' },
         { id: 'neosylheti', label: 'Neo Sylheti', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/Sylheti%20for%20card.png' },
-        { id: 'neobservers', label: 'New Era Obobservers', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/NEO%20for%20card.png' }
+        { id: 'neobservers', label: 'New Era Observers', url: 'https://raw.githubusercontent.com/mhchridoy-ai/KN-photocard-2026/main/NEO%20for%20card.png' }
     ];
 
     let imagesList = [];
@@ -807,6 +815,7 @@
         loadSavedData();
         setupDragAndPinchEvents();
         onHeadlineChange();
+        changeLogoVisibility(document.getElementById('logo-visibility-select').value);
     };
 
     function populateLogoDropdown() {
@@ -909,6 +918,7 @@
         card.className = `card-frame ${tplClass}`;
         const currentBg = document.getElementById('bg-color-picker').value;
         setBgColor(currentBg);
+        setTimeout(autoScaleHeadline, 30);
         saveAndSync();
     }
 
@@ -1203,7 +1213,7 @@
         if (sel.rangeCount > 0 && !sel.isCollapsed && editor.contains(sel.anchorNode)) {
             document.execCommand('styleWithCSS', false, false);
             document.execCommand('fontSize', false, '7');
-            const fontTags = editor.querySelectorAll('font[size="7"]');
+            const fontTags = editor.querySelectorAll('font[size="7"], font');
             fontTags.forEach(tag => {
                 tag.removeAttribute('size');
                 tag.style.fontSize = formattedSize;
@@ -1228,6 +1238,29 @@
         applyCustomFontSize(current);
     }
 
+    /* CONTINUOUS SCROLL-HEIGHT AUTO-SCALE FIT ALGORITHM */
+    function autoScaleHeadline() {
+        const headlineOut = document.getElementById('card-headline-out');
+        if (!headlineOut) return;
+
+        // Clear sub-elements' inline font-sizes if present so block shrinks uniformly
+        const childNodes = headlineOut.querySelectorAll('*');
+        childNodes.forEach(child => {
+            child.style.fontSize = '';
+        });
+
+        let baseSize = parseFloat(document.getElementById('font-size-num').value) || 22;
+        headlineOut.style.fontSize = baseSize + 'pt';
+
+        let currentSize = baseSize;
+
+        // Keep shrinking font size continuously until all text fits within bounds
+        while (headlineOut.scrollHeight > headlineOut.clientHeight && currentSize > 2) {
+            currentSize -= 0.5;
+            headlineOut.style.fontSize = currentSize + 'pt';
+        }
+    }
+
     function onHeadlineChange() {
         const inputElem = document.getElementById('headline-input');
         const rawText = inputElem.innerText.trim();
@@ -1239,6 +1272,8 @@
         } else {
             cardHeadlineOut.innerHTML = inputElem.innerHTML;
         }
+        
+        autoScaleHeadline();
         saveAndSync();
     }
 
@@ -1246,6 +1281,7 @@
         document.getElementById('card-headline-out').style.fontFamily = font;
         document.getElementById('headline-input').style.fontFamily = font;
         document.getElementById('card-date-out').style.fontFamily = font;
+        setTimeout(autoScaleHeadline, 30);
         saveAndSync();
     }
 
@@ -1446,3 +1482,4 @@
 </script>
 </body>
 </html>
+/Developed by MHC Hridoy
