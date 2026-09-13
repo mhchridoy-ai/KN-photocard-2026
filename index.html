@@ -456,11 +456,40 @@
                     <button class="btn-small" onmousedown="event.preventDefault()" onclick="applyStyleToSelection('underline')"><u>U</u></button>
                 </div>
 
+                <!-- ফন্ট সাইজ ড্রপডাউন এবং প্লাস-মাইনাস বাটন -->
                 <div class="form-row">
-                    <label>ফন্ট সাইজ (px):</label>
-                    <input type="number" id="fontSizeInput" value="150" style="width: 70px;">
+                    <label>ফন্ট সাইজ:</label>
+                    <select id="fontSizeSelect" onchange="changeFontSizePreset(this.value)" style="flex: 1;">
+                        <option value="120">120 px</option>
+                        <option value="130">130 px</option>
+                        <option value="140">140 px</option>
+                        <option value="150" selected>150 px (Default)</option>
+                        <option value="160">160 px</option>
+                        <option value="170">170 px</option>
+                        <option value="180">180 px</option>
+                        <option value="200">200 px</option>
+                    </select>
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="adjustFontSize(-2)" style="padding: 8px 12px; font-weight: bold;">-</button>
+                    <input type="number" id="fontSizeInput" value="150" style="width: 70px; text-align: center;" oninput="applyStyleToSelection('fontSize', parseInt(this.value) || 150)">
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="adjustFontSize(2)" style="padding: 8px 12px; font-weight: bold;">+</button>
+                </div>
+
+                <!-- লাইন স্পেসিং ড্রপডাউন এবং প্লাস-মাইনাস বাটন -->
+                <div class="form-row">
                     <label>লাইন স্পেসিং:</label>
-                    <input type="number" id="lineHeightInput" value="170" style="width: 70px;">
+                    <select id="lineHeightSelect" onchange="changeLineHeightPreset(this.value)" style="flex: 1;">
+                        <option value="140">140 px</option>
+                        <option value="150">150 px</option>
+                        <option value="160">160 px</option>
+                        <option value="170" selected>170 px (Default)</option>
+                        <option value="180">180 px</option>
+                        <option value="190">190 px</option>
+                        <option value="200">200 px</option>
+                        <option value="220">220 px</option>
+                    </select>
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="adjustLineHeight(-2)" style="padding: 8px 12px; font-weight: bold;">-</button>
+                    <input type="number" id="lineHeightInput" value="170" style="width: 70px; text-align: center;" oninput="changeLineHeightDirect(this.value)">
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="adjustLineHeight(2)" style="padding: 8px 12px; font-weight: bold;">+</button>
                 </div>
 
                 <div class="form-row">
@@ -685,7 +714,12 @@
                 if (prop === 'underline') state.isUnderline = !state.isUnderline;
                 if (prop === 'color') state.textColor = value;
                 if (prop === 'highlight') state.highlightColor = value;
-                if (prop === 'fontSize') state.fontSize = value;
+                if (prop === 'fontSize') {
+                    state.fontSize = value;
+                    document.getElementById('fontSizeInput').value = value;
+                    const selectElem = document.getElementById('fontSizeSelect');
+                    if(selectElem) selectElem.value = value;
+                }
 
                 headlineChars.forEach(c => {
                     if (prop === 'bold') c.bold = state.isBold;
@@ -703,7 +737,10 @@
                         else if (prop === 'underline') headlineChars[i].underline = !headlineChars[i].underline;
                         else if (prop === 'color') headlineChars[i].color = value;
                         else if (prop === 'highlight') headlineChars[i].highlight = value;
-                        else if (prop === 'fontSize') headlineChars[i].fontSize = value;
+                        else if (prop === 'fontSize') {
+                            headlineChars[i].fontSize = value;
+                            document.getElementById('fontSizeInput').value = value;
+                        }
                     }
                 }
             }
@@ -711,6 +748,48 @@
             renderApp();
             headlineInput.focus();
             headlineInput.setSelectionRange(start, end);
+        }
+
+        // নতুন ড্রপডাউন এবং প্লাস-মাইনাস হ্যান্ডেলার ফাংশনসমূহ
+        function changeFontSizePreset(val) {
+            const size = parseInt(val);
+            document.getElementById('fontSizeInput').value = size;
+            applyStyleToSelection('fontSize', size);
+        }
+
+        function adjustFontSize(amount) {
+            let current = parseInt(document.getElementById('fontSizeInput').value) || state.fontSize;
+            let newVal = Math.max(20, current + amount);
+            document.getElementById('fontSizeInput').value = newVal;
+            const selectElem = document.getElementById('fontSizeSelect');
+            if(selectElem) selectElem.value = newVal;
+            applyStyleToSelection('fontSize', newVal);
+        }
+
+        function changeLineHeightPreset(val) {
+            const lh = parseInt(val);
+            document.getElementById('lineHeightInput').value = lh;
+            saveHistory();
+            state.lineHeight = lh;
+            const selectElem = document.getElementById('lineHeightSelect');
+            if(selectElem) selectElem.value = lh;
+            renderApp();
+        }
+
+        function changeLineHeightDirect(val) {
+            const lh = parseInt(val) || 170;
+            saveHistory();
+            state.lineHeight = lh;
+            renderApp();
+        }
+
+        function adjustLineHeight(amount) {
+            let current = parseInt(document.getElementById('lineHeightInput').value) || state.lineHeight;
+            let newVal = Math.max(40, current + amount);
+            document.getElementById('lineHeightInput').value = newVal;
+            const selectElem = document.getElementById('lineHeightSelect');
+            if(selectElem) selectElem.value = newVal;
+            changeLineHeightDirect(newVal);
         }
 
         let layerStack = [
@@ -1320,8 +1399,6 @@
         document.getElementById('removeBgImageBtn').addEventListener('click', () => { saveHistory(); state.bgImage = null; renderApp(); });
 
         document.getElementById('font-family-select').addEventListener('change', e => { saveHistory(); state.fontFamily = e.target.value; renderApp(); });
-        document.getElementById('fontSizeInput').addEventListener('input', e => { applyStyleToSelection('fontSize', parseInt(e.target.value) || 150); });
-        document.getElementById('lineHeightInput').addEventListener('input', e => { saveHistory(); state.lineHeight = parseInt(e.target.value) || 170; renderApp(); });
 
         function setTextAlign(align) { saveHistory(); state.textAlign = align; renderApp(); }
 
