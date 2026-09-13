@@ -3,607 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karnafuli News - Multi-Photo Card Generator</title>
-    
+    <title>KN, NEO News Card Editor</title>
+    <!-- JSZip for Batch Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700&family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@400;600;700&family=Noto+Serif+Bengali:wght@400;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
-    
-    <!-- html2canvas for PNG export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;700&family=Hind+Siliguri:wght@400;700&family=Inter:wght@400;700&family=Noto+Serif+Bengali:wght@400;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Kalpurush';
-            src: url('https://cdn.jsdelivr.net/gh/ekushey/fonts@main/kalpurush.ttf') format('truetype');
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'July';
-            src: url('https://cdn.jsdelivr.net/gh/lipighor/fonts@main/Li%20Ador%20July%20Unicode.ttf') format('truetype');
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'UN Bangla';
-            src: url('https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/UNBangla-Regular.ttf') format('truetype');
-            font-display: swap;
-        }
-
         :root {
-            --primary-color: #0f172a;
-            --accent-color: #bb1919;
-            --bg-color: #f1f5f9;
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-color: #2563eb;
+            --text-color: #f8fafc;
+            --border-color: #334155;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Noto Serif Bengali', 'Hind Siliguri', sans-serif;
             background-color: var(--bg-color);
-            color: #334155;
-            padding: 20px;
-            touch-action: manipulation;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .app-container {
+        header {
+            background-color: var(--panel-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            max-width: 1400px;
-            margin: 0 auto;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: #60a5fa;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            flex: 1;
+            gap: 15px;
+            padding: 15px;
+            width: 100%;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+            }
         }
 
         .controls-panel {
-            flex: 1;
-            min-width: 320px;
-            background: #ffffff;
-            padding: 24px;
+            flex: 1.2;
+            background: var(--panel-bg);
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            max-height: 92vh;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            max-height: 100%;
         }
 
-        .panel-title {
-            font-size: 18pt;
-            font-weight: 700;
-            color: var(--primary-color);
-            border-bottom: 3px solid var(--accent-color);
-            padding-bottom: 8px;
-            margin-bottom: 20px;
+        .tabs {
+            display: flex;
+            gap: 5px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
         }
 
-        .form-section {
-            margin-bottom: 20px;
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 6px;
         }
 
-        .form-section h3 {
-            font-size: 11pt;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #93c5fd;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+            margin-top: 5px;
         }
 
         .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 10pt;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #1e293b;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 10pt;
-            background: #fff;
-            touch-action: manipulation;
-        }
-
-        .editor-toolbar {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 6px;
-            background: #e2e8f0;
-            padding: 8px;
-            border-radius: 6px 6px 0 0;
-            border: 1px solid #cbd5e1;
-            border-bottom: none;
-            align-items: center;
         }
 
-        .toolbar-btn {
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 6px 10px;
-            font-size: 10pt;
-            cursor: pointer;
-            user-select: none;
-            font-weight: 600;
-        }
-
-        .toolbar-btn:hover {
-            background: #0f172a;
-            color: #fff;
-        }
-
-        .font-size-control-box {
+        .form-row {
             display: flex;
-            align-items: center;
-            gap: 4px;
-            background: #fff;
-            padding: 2px 6px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .font-size-control-box input {
-            width: 45px;
-            border: none;
-            text-align: center;
-            font-size: 10pt;
-            font-weight: bold;
-            outline: none;
-        }
-
-        .rich-input {
-            width: 100%;
-            min-height: 110px;
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 0 0 6px 6px;
-            background: #fff;
-            font-size: 22pt;
-            line-height: 1.35;
-            outline: none;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            text-align: left;
-            font-family: 'Noto Serif Bengali', serif;
-            position: relative;
-        }
-
-        .rich-input:empty:before {
-            content: attr(data-placeholder);
-            color: #94a3b8;
-            pointer-events: none;
-            display: block;
-        }
-
-        .btn-action {
-            display: inline-block;
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 11pt;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s;
-        }
-
-        .btn-action:hover {
-            background-color: #1e293b;
-        }
-
-        .btn-download {
-            background-color: var(--accent-color);
-            font-size: 13pt;
-            padding: 16px;
-            margin-top: 15px;
-        }
-
-        .btn-download:hover {
-            background-color: #991111;
-        }
-
-        .btn-secondary {
-            background-color: #64748b;
-        }
-
-        .slider-group {
-            display: flex;
-            align-items: center;
             gap: 10px;
-            margin-bottom: 8px;
+            align-items: center;
         }
 
-        .slider-group label {
-            width: 110px;
-            font-size: 9pt;
-            margin: 0;
-            font-weight: 600;
+        label {
+            font-size: 0.85rem;
+            color: #cbd5e1;
         }
 
-        .slider-group input[type="range"] {
-            touch-action: pan-x;
+        select, input[type="text"], textarea, input[type="number"], input[type="color"] {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: #0f172a;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
         }
 
-        .color-presets {
+        textarea#headlineInput {
+            width: 100%;
+            min-height: 120px;
+            font-size: 1rem;
+            line-height: 1.4;
+            resize: vertical;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            background: #334155;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-small:hover {
+            background: #475569;
+        }
+
+        .color-swatch-grid {
             display: flex;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
+            margin-top: 5px;
         }
 
         .color-swatch {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid #cbd5e1;
-            transition: transform 0.2s;
+            border: 2px solid #ffffff33;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .color-swatch:hover {
             transform: scale(1.15);
-        }
-
-        .img-gallery {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 6px 0;
-            margin-bottom: 10px;
-        }
-
-        .img-thumb {
-            width: 65px;
-            height: 65px;
-            object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid #cbd5e1;
-            flex-shrink: 0;
-        }
-
-        .img-thumb.active {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 2px rgba(187,25,25,0.4);
+            border-color: #ffffff;
         }
 
         .preview-panel {
-            flex: 1.2;
+            flex: 1.5;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
+            justify-content: center;
+            position: relative;
         }
 
-        .card-frame {
-            position: relative;
+        .canvas-container {
             width: 100%;
             max-width: 550px;
             aspect-ratio: 1 / 1;
-            background-color: #0f172a;
+            background-color: #e2e8f0;
+            background-image: 
+                linear-gradient(45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #cbd5e1 75%), 
+                linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            user-select: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: relative;
+            touch-action: none;
+            cursor: crosshair;
         }
 
-        .card-header {
-            position: absolute;
-            top: 3.6%;
-            left: 3.6%;
-            height: 8.7%;
-            z-index: 10;
-            background: transparent !important;
-            padding: 0 !important;
-            border: none !important;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .card-logo {
+        canvas {
+            width: 100%;
             height: 100%;
-            width: auto;
             object-fit: contain;
             display: block;
-            transition: filter 0.25s ease-in-out;
         }
 
-        .logo-style-dark-shadow {
-            filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.75)) !important;
-        }
-
-        .logo-style-white-glow {
-            filter: drop-shadow(0px 2px 6px rgba(255, 255, 255, 0.85)) !important;
-        }
-
-        .logo-style-none {
-            filter: none !important;
-            background: transparent !important;
-        }
-
-        .logo-style-solid-bg {
-            background-color: #ffffff !important;
-            padding: 10px !important;
-            border-radius: 8px !important;
-            filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.3));
-        }
-
-        .logo-style-outline {
-            border: 2px solid #ffffff !important;
-            border-radius: 8px !important;
-            padding: 4px !important;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
-        }
-
-        .logo-style-dark-box {
-            background: rgba(0, 0, 0, 0.65) !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            backdrop-filter: blur(3px);
-        }
-
-        .logo-style-light-box {
-            background: rgba(255, 255, 255, 0.8) !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            backdrop-filter: blur(3px);
-        }
-
-        .logo-backdrop-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 22%;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
-            z-index: 9;
-            pointer-events: none;
-            display: none;
-        }
-
-        .card-image-box {
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background-color: #000;
-            flex-shrink: 0;
-        }
-
-        .card-image-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-            touch-action: none;
-        }
-
-        .card-image-layer:active {
-            cursor: grabbing;
-        }
-
-        .card-image-layer img {
-            position: absolute;
-            pointer-events: none;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            max-width: none;
-            max-height: none;
-            transform-origin: center center;
-            will-change: transform;
-        }
-
-        .tpl-fade .card-image-box {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            aspect-ratio: auto;
-            flex-shrink: 1;
-        }
-
-        .tpl-fade .card-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2;
-            display: block;
-        }
-
-        .tpl-fade .card-body {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            max-height: 55%;
-            padding: 5.5% 5.5% 4.5% 5.5%;
-            z-index: 3;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            overflow: hidden;
-        }
-
-        .tpl-split169 {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .tpl-split169 .card-overlay {
-            display: none;
-        }
-
-        .tpl-split169 .card-body {
-            position: relative;
-            padding: 4.5% 5% 3.6% 5%;
-            z-index: 3;
-            color: #ffffff;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-
-        .tpl-modern .card-overlay {
-            display: none;
-        }
-
-        .tpl-modern .card-body {
-            position: relative;
-            padding: 4.5% 5% 3.6% 5%;
-            z-index: 3;
-            color: #ffffff;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border-top: 4px solid var(--accent-color);
-            overflow: hidden;
-        }
-
-        .card-headline-wrapper {
-            flex: 1;
-            width: 100%;
-            overflow: hidden;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .card-headline {
-            font-family: 'Noto Serif Bengali', serif;
-            font-size: 22pt;
-            line-height: 1.35;
-            word-break: break-word;
-            white-space: pre-wrap;
-            text-align: left;
-            width: 100%;
-            transform-origin: top left;
-            margin: 0 auto;
-        }
-
-        .card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.25);
-            padding-top: 10px;
-            margin-top: 8px;
-            font-size: 11pt;
-            color: rgba(255,255,255,0.9);
-            width: 100%;
-            flex-shrink: 0;
-        }
-
-        #card-date-out {
-            font-family: inherit;
-        }
-
-        #card-username-out {
-            text-align: right;
-            direction: ltr;
-            margin-left: auto;
-        }
-
-        .custom-font-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 0;
-        }
-
-        .btn-sm-del {
-            background: #ef4444;
-            color: white;
+        .btn {
+            padding: 8px 14px;
             border: none;
-            padding: 2px 8px;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 8pt;
+            transition: all 0.2s ease;
         }
 
-        @media (max-width: 950px) {
-            body {
-                padding: 10px;
-            }
-            .app-container {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .controls-panel {
-                max-height: none;
-                overflow-y: visible;
-                padding: 16px;
-            }
-            .card-frame {
-                width: 100%;
-                max-width: 100%;
-            }
+        .btn-primary { background-color: #2563eb; color: white; }
+        .btn-success { background-color: #059669; color: white; }
+        .btn-danger { background-color: #dc2626; color: white; }
+        .btn-secondary { background-color: #475569; color: white; }
+
+        .layer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0f172a;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+        }
+
+        .layer-item.selected {
+            border-color: #2563eb;
+            background: #1e3a8a;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .layer-edit-box {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <!-- Left Controls Panel -->
-    <div class="controls-panel">
-        <h2 class="panel-title">NEO নিউজ ফটোকার্ড জেনারেটর</h2>
-
-        <!-- Undo, Redo & Reset Controls -->
-        <div class="form-section" style="background: #e2e8f0; display: flex; gap: 8px;">
-            <button class="btn-action btn-secondary" onclick="undoAction()" style="flex: 1; padding: 8px; font-size: 9.5pt;" title="পেছনে ফিরুন (Undo)">↩ Undo</button>
-            <button class="btn-action btn-secondary" onclick="redoAction()" style="flex: 1; padding: 8px; font-size: 9.5pt;" title="সামনে যান (Redo)">Redo ↪</button>
-            <button class="btn-action" onclick="resetMemory()" style="flex: 1.2; padding: 8px; font-size: 9.5pt; background-color: #ef4444;" title="মেমোরি রিসেট ও ডাটা মুছুন">🗑️ Memory Reset</button>
+    <header>
+        <h1>KN, NEO Photo Card Editor</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="undoBtn">↺ Undo</button>
+            <button class="btn btn-secondary" id="redoBtn">↻ Redo</button>
+            <button class="btn btn-danger" id="resetMemoryBtn">🗑 Rest Memory</button>
+            <button class="btn btn-primary" id="downloadSingleBtn">⬇ Download PNG</button>
+            <button class="btn btn-success" id="downloadBatchBtn">📦 Download in all theme (ZIP)</button>
         </div>
+    </header>
 
-        <!-- Template Selector -->
-        <div class="form-section">
-            <h3>১. টেমপ্লেট নির্বাচন করুন (১:১ স্কয়ার ফ্রেম)</h3>
-            <div class="form-group">
-                <select id="template-select" onchange="changeTemplate(this.value)">
-                    <option value="tpl-modern" selected>১. মডার্ন ব্যানার (১:১ ফ্রেম + ১৬:৯ ইমেজ + রেড স্ট্রিপ)</option>
-                    <option value="tpl-split169">২. ১৬:৯ স্প্লিট (১:১ ফ্রেম + ১৬:৯ ইমেজ)</option>
-                    <option value="tpl-fade">৩. ক্লাসিক ফেড (১:১ ফ্রেম + গ্রাডিয়েন্ট ফেইড)</option>
-                </select>
+    <div class="main-container">
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-template')">১. টেমপ্লেট</button>
+                <button class="tab-btn" onclick="switchTab('tab-text')">২. টেক্সট ও ফন্ট</button>
+                <button class="tab-btn" onclick="switchTab('tab-brand')">৩. ব্র্যান্ড ও লোগো</button>
+                <button class="tab-btn" onclick="switchTab('tab-layers')">৪. লেয়ার ও এলিমেন্ট</button>
             </div>
 
-            <!-- Background Color Chooser -->
-            <div class="form-group" id="bg-color-group">
-                <label id="color-picker-label">কার্ড ব্যাকগ্রাউন্ড / ফেইড কালার:</label>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="color" id="bg-color-picker" value="#0f172a" onchange="setBgColor(this.value)" style="width:40px; height:35px; cursor:pointer; border:1px solid #cbd5e1; border-radius:4px;">
-                    <span style="font-size: 9pt; color: #64748b;">কাস্টম কালার সিলেক্টর</span>
+            <!-- TAB 1: Template -->
+            <div id="tab-template" class="tab-content active">
+                <div class="form-group">
+                    <label>লেআউট থিম:</label>
+                    <select id="themeSelect">
+                        <option value="classic_bottom">Theme 1: ক্লাসিক বটম ওভারলে</option>
+                        <option value="curved_modern">Theme 2: ডায়াগনাল কার্ভড লেআউট</option>
+                        <option value="full_frame">Theme 3: ফুল ফ্রেম কভার</option>
+                        <option value="gradient_strip">Theme 4: গ্রেডিয়েন্ট মিনিমালিস্ট</option>
+                    </select>
                 </div>
-                <div class="color-presets">
+
+                <div class="form-group">
+                    <label>কালার স্কিম:</label>
+                    <select id="colorSelect">
+                        <option value="breaking_red">Breaking Red (লাল-হলুদ)</option>
+                        <option value="navy_trust">Navy Blue (গভীর নীল-গোল্ড)</option>
+                        <option value="emerald_green">Emerald Green (সবুজ-সাদা)</option>
+                        <option value="dark_gold">Midnight Dark & Gold (কালো-গোল্ড)</option>
+                        <option value="vibrant_orange">Vibrant Orange (কমলা-সাদা)</option>
+                        <option value="teal_modern">Corporate Teal (টিল-হলুদ)</option>
+                        <option value="dark_navy">Dark Navy</option>
+                        <option value="deep_maroon">Deep Maroon</option>
+                        <option value="media_red">International Media Red</option>
+                        <option value="solid_black">Solid Black</option>
+                        <option value="slate_dark">Slate Dark</option>
+                        <option value="deep_green">Deep Green</option>
+                    </select>
+                </div>
+
+                <div class="section-title">কাস্টম ব্যাকগ্রাউন্ড কালার ও RGB সোয়াচ</div>
+                <div class="form-row">
+                    <label>কাস্টম শেড পিক করুন:</label>
+                    <input type="color" id="bgCustomColorPicker" value="#0f172a" style="height: 38px; width: 60px; cursor: pointer;">
+                </div>
+                <div class="color-swatch-grid">
                     <div class="color-swatch" style="background: #0f172a;" onclick="setBgColor('#0f172a')" title="Dark Navy"></div>
                     <div class="color-swatch" style="background: #660000;" onclick="setBgColor('#660000')" title="Deep Maroon"></div>
                     <div class="color-swatch" style="background: #bb1919;" onclick="setBgColor('#bb1919')" title="International Media Red"></div>
@@ -611,1094 +373,1339 @@
                     <div class="color-swatch" style="background: #1e293b;" onclick="setBgColor('#1e293b')" title="Slate Dark"></div>
                     <div class="color-swatch" style="background: #0f3822;" onclick="setBgColor('#0f3822')" title="Deep Green"></div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Multi-Image Upload & Controls -->
-        <div class="form-section">
-            <h3>২. ঘটনার ছবি (ফুল ইমেজ ভিউ, পিন্চ-জুম ও ড্র্যাগ)</h3>
-            <div class="form-group">
-                <input type="file" id="img-input" accept="image/*" multiple onchange="handleMultipleImagesUpload(event)">
-            </div>
-            
-            <div class="img-gallery" id="img-gallery"></div>
-
-            <div id="img-controls" style="display: none;">
-                <div class="form-group slider-group">
-                    <label>জুম (Zoom):</label>
-                    <input type="range" id="zoom-slider" min="0.05" max="3.5" step="0.01" value="1" oninput="updateImageTransformFromSlider()">
+                <div class="section-title">টপ অ্যাকসেন্ট স্ট্রিপ</div>
+                <div class="form-row">
+                    <label><input type="checkbox" id="showStrip" checked> স্ট্রিপ দেখান</label>
+                    <select id="stripColorPreset">
+                        <option value="#B71C1C">লাল (Red)</option>
+                        <option value="#FFD54F">হলুদ (Yellow)</option>
+                        <option value="#FFFFFF">সাদা (White)</option>
+                        <option value="custom">কাস্টম কালার</option>
+                    </select>
+                    <input type="color" id="stripCustomColor" value="#FFD54F">
                 </div>
-                <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 12px;">* ছবি ইচ্ছামতো জুম আউট/ইন করে ড্র্যাগ করে ফ্রেমে বসিয়ে নিন।</p>
 
-                <h4 style="font-size: 9.5pt; color: #334155; margin-bottom: 8px;">বেসিক ফটো এডিটিং ও কালার টোন:</h4>
-                <div class="slider-group">
-                    <label>উজ্জ্বলতা (Bright):</label>
-                    <input type="range" id="brightness-slider" min="50" max="150" value="100" oninput="applyPhotoFilters()">
+                <div class="section-title">মূল ঘটনার ছবি (Background Image)</div>
+                <div class="form-group">
+                    <input type="file" id="bgImageInput" accept="image/*">
                 </div>
-                <div class="slider-group">
-                    <label>কনট্রাস্ট (Contrast):</label>
-                    <input type="range" id="contrast-slider" min="50" max="150" value="100" oninput="applyPhotoFilters()">
+                <div class="form-row">
+                    <label>ছবি জুম/স্কেল (PC/Mobile):</label>
+                    <input type="range" id="bgZoomInput" min="0.1" max="4" step="0.05" value="1">
+                    <span id="bgZoomVal" style="font-size: 0.85rem; width: 45px;">100%</span>
                 </div>
-                <div class="slider-group">
-                    <label>স্যাচুরেশন (Color):</label>
-                    <input type="range" id="saturate-slider" min="0" max="200" value="100" oninput="applyPhotoFilters()">
+                <div class="form-row">
+                    <label><input type="checkbox" id="showBgImage" checked> ছবি দেখান/শো</label>
+                    <button class="btn btn-danger btn-small" id="removeBgImageBtn">ছবি রিমুভ</button>
                 </div>
-                <button class="btn-action btn-secondary" onclick="resetFilters()" style="padding: 6px; font-size: 9pt; margin-bottom: 10px;">কালার টোন রিসেট</button>
-                <button class="btn-action btn-secondary" onclick="removeActiveImage()">Remove selected Image</button>
-            </div>
-        </div>
 
-        <!-- Headline Controls -->
-        <div class="form-section">
-            <h3>৩. হেডলাইন, অ্যালাইনমেন্ট ও স্পেসিং</h3>
-            <div class="editor-toolbar">
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('left')" title="বামপাশে এলাইন (Left)">Left</button>
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('center')" title="মাঝখানে এলাইন (Center)">Center</button>
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="setTextAlign('right')" title="ডানপাশে এলাইন (Right)">Right</button>
-                <span style="border-right: 1px solid #cbd5e1; height: 20px; margin: 0 2px;"></span>
-
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('bold')" title="বোল্ড"><b>B</b></button>
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('italic')" title="ইটালিক"><i>I</i></button>
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('underline')" title="আন্ডারলাইন"><u>U</u></button>
-                <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')" title="ফরম্যাট ক্লিয়ার">Tx</button>
-                <input type="color" id="text-color" value="#ffffff" onmousedown="event.preventDefault()" onchange="applyTextColor(this.value)" title="সিলেক্টেড অংশের টেক্সট কালার" style="width:30px; height:28px; cursor:pointer;">
-                
-                <div class="font-size-control-box" title="ফন্ট সাইজ (সিলেক্টেড বা সম্পূর্ণ অংশ)">
-                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(-2)" style="padding: 2px 6px;">-</button>
-                    <input type="number" id="font-size-num" value="22" min="1" onchange="applyCustomFontSize(this.value)">
-                    <span style="font-size: 8pt; color: #64748b;">pt</span>
-                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="stepFontSize(2)" style="padding: 2px 6px;">+</button>
+                <div class="section-title">মার্জিন কাস্টমাইজেশন (Safe Area Alignment):</div>
+                <div class="form-row">
+                    <label>px (Max 120px):</label>
+                    <input type="number" id="marginPx" value="110" max="120" style="width: 70px;">
+                    <label>mm:</label>
+                    <input type="number" id="marginMm" value="29.1" step="0.1" style="width: 70px;">
                 </div>
             </div>
 
-            <div class="slider-group" style="margin-top: 12px; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-                <label for="line-height-slider">সিলেক্টেড টেক্সট স্পেসিং:</label>
-                <input type="range" id="line-height-slider" min="0.9" max="3.0" step="0.05" value="1.35" oninput="changeLineHeight(this.value)">
-                <span id="line-height-val" style="font-size: 9pt; font-weight: bold; color: #1e293b; width: 35px; text-align: right;">1.35</span>
+            <!-- TAB 2: Text & Font -->
+            <div id="tab-text" class="tab-content">
+                <div class="form-group">
+                    <label>সংবাদের শিরোনাম (Headline):</label>
+                    <textarea id="headlineInput" placeholder="Type your headline...">Hail MHC Hridoy The Great!</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Font:</label>
+                    <select id="font-family-select">
+                        <option value="'Noto Serif Bengali', serif">1. Noto Serif Bengali (ইউনিভার্সাল)</option>
+                        <option value="'Hind Siliguri', sans-serif">2. Hind Siliguri (মোবাইল ফ্রেন্ডলি)</option>
+                        <option value="'Tiro Bangla', serif">3. Tiro Bangla (ক্লাসিক)</option>
+                        <option value="'Anek Bangla', sans-serif">4. Anek Bangla (মডার্ন)</option>
+                        <option value="'Kalpurush', sans-serif">5. Kalpurush (কালপুরুষ)</option>
+                        <option value="'July', sans-serif">6. July (জুলাই)</option>
+                        <option value="'UN Bangla', sans-serif" selected>7. UN Bangla (ইউএন বাংলা)</option>
+                        <option value="'Inter', sans-serif">8. Inter (English)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Custom colours (.ttf/.woff):</label>
+                    <input type="file" id="customFontInput" accept=".ttf,.otf,.woff,.woff2">
+                </div>
+
+                <div class="section-title">টেক্সট ফরম্যাটিং ও স্টাইল (সিলেকশন ভিত্তিক)</div>
+                <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px;">
+                    💡 টেক্সট বক্সে কোনো অংশ সিলেক্ট করে নিচের অপশনে ক্লিক করলে কেবল সেই নির্দিষ্ট অংশের উপর এফেক্ট পড়বে।
+                </p>
+
+                <div class="form-row">
+                    <label>অ্যালাইনমেন্ট:</label>
+                    <div class="btn-grid">
+                        <button class="btn-small" onmousedown="event.preventDefault()" onclick="setTextAlign('left')">Left</button>
+                        <button class="btn-small" onmousedown="event.preventDefault()" onclick="setTextAlign('center')">Center</button>
+                        <button class="btn-small" onmousedown="event.preventDefault()" onclick="setTextAlign('right')">Right</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>স্টাইল:</label>
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="applyStyleToSelection('bold')"><b>B</b></button>
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="applyStyleToSelection('italic')"><i>I</i></button>
+                    <button class="btn-small" onmousedown="event.preventDefault()" onclick="applyStyleToSelection('underline')"><u>U</u></button>
+                </div>
+
+                <div class="form-row">
+                    <label>ফন্ট সাইজ (px):</label>
+                    <input type="number" id="fontSizeInput" value="150" style="width: 70px;">
+                    <label>লাইন স্পেসিং:</label>
+                    <input type="number" id="lineHeightInput" value="170" style="width: 70px;">
+                </div>
+
+                <div class="form-row">
+                    <label>টেক্সট কালার (সিলেকশন):</label>
+                    <input type="color" id="textColorInput" value="#FFFFFF" onchange="applyStyleToSelection('color', this.value)">
+                </div>
+
+                <div class="form-row">
+                    <label>হাইলাইট কালার (সিলেকশন):</label>
+                    <select id="highlightPreset" onchange="applyStyleToSelection('highlight', this.value)">
+                        <option value="transparent">None</option>
+                        <option value="#FFFF00">হলুদ</option>
+                        <option value="#FF0000">লাল</option>
+                        <option value="#FFFFFF">সাদা</option>
+                        <option value="#000000">কালো</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="rich-input" id="headline-input" contenteditable="true" data-placeholder="এখানে সংবাদের প্রধান শিরোনাম লিখুন..." oninput="onHeadlineChange()"></div>
+            <!-- TAB 3: Brand & Logo -->
+            <div id="tab-brand" class="tab-content">
+                <div class="form-group">
+                    <label>ব্র্যান্ড লোগো সিলেক্ট করুন:</label>
+                    <select id="logoSelect">
+                        <option value="karnafuli">1. Karnafuli News</option>
+                        <option value="deyang">2. Deyang</option>
+                        <option value="neosylheti">3. NEO Sylheti</option>
+                        <option value="neobservers">4. NEO Observers</option>
+                        <option value="custom">5. Custom logo (ডিভাইস থেকে)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="customLogoGroup" style="display: none;">
+                    <label>কাস্টম লোগো ফাইল:</label>
+                    <input type="file" id="customLogoInput" accept="image/*">
+                </div>
+
+                <div class="form-row">
+                    <label>লোগোর চওড়া/প্রস্থ (px):</label>
+                    <input type="number" id="logoWidthInput" value="460" style="width: 80px;">
+                </div>
+
+                <div class="form-row">
+                    <label><input type="checkbox" id="showLogo" checked> লোগো দেখান/শো</label>
+                    <button class="btn btn-secondary btn-small" id="resetLogoPosBtn">রিসেট লোগো পজিশন</button>
+                </div>
+
+                <div class="section-title">ফুটার হ্যান্ডেল ও তারিখ</div>
+                <div class="form-group">
+                    <label>সোশ্যাল মিডিয়া হ্যান্ডেল preset:</label>
+                    <select id="handlePresetSelect">
+                        <option value="KarnafuliNewsOnline">1. KarnafuliNewsOnline</option>
+                        <option value="Deayng360">2. Deayng360</option>
+                        <option value="NeoSylheti">3. NeoSylheti</option>
+                        <option value="NEObservers">4. NEObservers</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>হ্যান্ডেল টেক্সট (@handle):</label>
+                    <input type="text" id="handleInput" value="KarnafuliNewsOnline">
+                </div>
+
+                <div class="form-row">
+                    <label>ফুটার ফন্ট সাইজ (px):</label>
+                    <input type="number" id="footerFontSizeInput" value="80" style="width: 75px;">
+                    <label>হ্যান্ডেল কালার:</label>
+                    <input type="color" id="handleColorInput" value="#FFFFFF">
+                </div>
+
+                <div class="form-group">
+                    <label>তারিখ টেক্সট:</label>
+                    <input type="text" id="dateInput" value="১৩ সেপ্টেম্বর ২০২৬">
+                </div>
+                <div class="form-row">
+                    <label>তারিখ কালার:</label>
+                    <input type="color" id="dateColorInput" value="#CBD5E1">
+                </div>
+            </div>
+
+            <!-- TAB 4: Layers & PIP -->
+            <div id="tab-layers" class="tab-content">
+                <div class="section-title">নতুন কাস্টম লেয়ার যোগ করুন</div>
+                <div class="form-row">
+                    <button class="btn btn-primary btn-small" id="addTextLayerBtn">+ Text Layer</button>
+                    <button class="btn btn-primary btn-small" id="addShapeLayerBtn">+ Shape Layer</button>
+                    <button class="btn btn-primary btn-small" id="addPipLayerBtn">+ PIP Image</button>
+                    <input type="file" id="pipFileInput" accept="image/*" style="display: none;">
+                </div>
+
+                <div id="selectedLayerEditPanel" class="layer-edit-box" style="display: none;">
+                    <div style="font-size: 0.9rem; font-weight: bold; color: #60a5fa;" id="selectedLayerTitle">লেয়ার এডিটর</div>
+                    <div id="selectedLayerControls"></div>
+                </div>
+
+                <div class="section-title">লেয়ার স্ট্যাক (অর্ডার কাস্টমাইজেশন)</div>
+                <div class="layer-list" id="layerListContainer">
+                </div>
+            </div>
         </div>
 
-        <!-- Font Options -->
-        <div class="form-section">
-            <h3>৪. ফন্ট অপশন (হেডলাইন ও তারিখ)</h3>
-            <div class="form-group">
-                <label>ফন্ট নির্বাচন করুন:</label>
-                <select id="font-family-select" onchange="changeFontFamily(this.value)">
-                    <option value="'Noto Serif Bengali', serif" selected>1. Noto Serif Bengali (ইউনিভার্সাল)</option>
-                    <option value="'Hind Siliguri', sans-serif">2. Hind Siliguri (মোবাইল ফ্রেন্ডলি)</option>
-                    <option value="'Tiro Bangla', serif">3. Tiro Bangla (ক্লাসিক)</option>
-                    <option value="'Anek Bangla', sans-serif">4. Anek Bangla (মডার্ন)</option>
-                    <option value="'Kalpurush', sans-serif">5. Kalpurush (কালপুরুষ)</option>
-                    <option value="'July', sans-serif">6. July (জুলাই)</option>
-                    <option value="'UN Bangla', sans-serif">7. UN Bangla (ইউএন বাংলা)</option>
-                    <option value="'Inter', sans-serif">8. Inter (English)</option>
-                </select>
+        <!-- Canvas Preview Panel -->
+        <div class="preview-panel">
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="cardCanvas" width="2560" height="2560"></canvas>
             </div>
-            <div class="form-group">
-                <label>ফোন থেকে কাস্টম ফন্ট যোগ করুন (.ttf / .woff):</label>
-                <input type="file" id="font-file-input" accept=".ttf, .otf, .woff, .woff2" onchange="uploadCustomFont(event)">
-            </div>
-            <div id="custom-fonts-list"></div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">
+                💡 ক্যানভাসে লেয়ার বা টেক্সট ধরে মাউস দিয়ে ড্র্যাগ (সরানো) করুন। নীল কোণায় ধরে টেনে ডায়াগোনালি সাইজ বড়-ছোট করুন।
+            </p>
         </div>
-
-        <!-- Meta Info, Logo & Username -->
-        <div class="form-section">
-            <h3>৫. লোগো, তারিখ ও ইউজারনেম</h3>
-
-            <div class="form-group">
-                <label>ব্র্যান্ড লোগো নির্বাচন করুন:</label>
-                <select id="logo-select" onchange="onLogoSelectChange(this.value)"></select>
-            </div>
-
-            <div class="form-group" style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
-                <label style="color: #0f172a; font-weight: 700;">লোগো ভিজিবিলিটি (স্মার্ট অটো-কন্ট্রাস্ট):</label>
-                <select id="logo-visibility-select" onchange="changeLogoVisibility(this.value)">
-                    <option value="auto" selected>⚡ Auto Dynamic (ছবির উজ্জ্বলতা অনুযায়ী অটো কালো/সাদা শ্যাডো)</option>
-                    <option value="dark-shadow">Dark Drop Shadow (কালো শ্যাডো)</option>
-                    <option value="white-glow">White Glow (সাদা শ্যাডো/গ্লো)</option>
-                    <option value="none">None (সাধারণ - শ্যাডো ছাড়া)</option>
-                    <option value="solid-bg">Solid Background (সাদা ব্যাকগ্রাউন্ড বক্স)</option>
-                    <option value="outline">Outline (সাদা আউটলাইন বর্ডার)</option>
-                    <option value="dark-box">Semi-transparent Dark Box (কালো ঝাপসা ব্যাকগ্রাউন্ড)</option>
-                    <option value="light-box">Semi-transparent Light Box (সাদা ঝাপসা ব্যাকগ্রাউন্ড)</option>
-                    <option value="top-backdrop">Top Gradient Backdrop (উপরের অংশে হালকা কালো শেড)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>তারিখ:</label>
-                <input type="text" id="in-date" value="১১ সেপ্টেম্বর ২০২৬" oninput="saveAndSync()">
-            </div>
-
-            <div class="form-group">
-                <label>পেজ ইউজারনেম নির্বাচন করুন:</label>
-                <select id="username-select" onchange="onUsernameSelectChange(this.value)">
-                    <option value="KarnafuliNewsOnline" selected>1. KarnafuliNewsOnline</option>
-                    <option value="Deyang360">2. Deyang</option>
-                    <option value="NeoSylheti">3. NeoSylheti</option>
-                    <option value="NEObservers">4. NEObservers</option>
-                    <option value="custom">5. Custom (কাস্টম টাইপ করুন)</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="custom-username-box" style="display: none;">
-                <label>কাস্টম ইউজারনেম লিখুন:</label>
-                <input type="text" id="in-username-custom" value="YourPageUsername" oninput="saveAndSync()">
-            </div>
-        </div>
-
-        <button class="btn-action btn-download" onclick="downloadPhotoCard()">Download The Photo Card</button>
     </div>
 
-    <!-- Preview Panel -->
-    <div class="preview-panel">
-        <div class="card-frame tpl-modern" id="photo-card">
-            <div class="logo-backdrop-overlay" id="logo-backdrop"></div>
-
-            <div class="card-header" id="card-header">
-                <img id="brand-logo" src="" alt="Logo" class="card-logo">
-            </div>
-
-            <div class="card-image-box" id="image-box">
-                <div class="card-image-layer" id="image-layer">
-                    <img id="card-img" src="" alt="" style="display: none;">
-                </div>
-            </div>
-
-            <div class="card-overlay" id="card-overlay"></div>
-
-            <div class="card-body">
-                <div class="card-headline-wrapper">
-                    <div class="card-headline" id="card-headline-out">এখানে সংবাদের প্রধান শিরোনাম লিখুন...</div>
-                </div>
-                <div class="card-footer">
-                    <span id="card-date-out">১১ সেপ্টেম্বর ২০২৬</span>
-                    <span id="card-username-out">@KarnafuliNewsOnline</span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<script>
-    const STORAGE_KEY = 'karnafuli_photocard_v12';
-
-    const config = {
-        isDynamic: true,
-        glowRadius: '6px',
-        logoIsDark: true
-    };
-
-    const AVAILABLE_LOGOS = [
-        { id: 'karnafuli', label: 'Karnafuli News', url: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/KN%20stroke.png' },
-        { id: 'deyang', label: 'Deyang', url: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Deyang%20stroke.png' },
-        { id: 'neosylheti', label: 'Neo Sylheti', url: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Sylheti%20stroke.png' },
-        { id: 'neobservers', label: 'New Era Observers', url: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Observers%20stroke.png' }
-    ];
-
-    let imagesList = [];
-    let activeImgIndex = -1;
-    let currentAlignment = 'left';
-    let rawLogoDataUrl = '';
-    let savedRange = null;
-
-    let undoStack = [];
-    let redoStack = [];
-    let isPerformingUndoRedo = false;
-
-    let imgState = {
-        scale: 1,
-        posX: 0,
-        posY: 0,
-        brightness: 100,
-        contrast: 100,
-        saturate: 100,
-        isDragging: false,
-        startX: 0,
-        startY: 0
-    };
-
-    let touchState = {
-        initialDist: 0,
-        initialScale: 1,
-        isPinching: false
-    };
-
-    let customFonts = [];
-
-    window.onload = function() {
-        preloadExternalFonts();
-        populateLogoDropdown();
-        loadSavedData();
-        setupDragAndPinchEvents();
-        setupSelectionTracker();
-        onHeadlineChange();
-    };
-
-    function setupSelectionTracker() {
-        const editor = document.getElementById('headline-input');
-        const storeSelection = () => {
-            const sel = window.getSelection();
-            if (sel.rangeCount > 0) {
-                const range = sel.getRangeAt(0);
-                if (editor.contains(range.commonAncestorContainer)) {
-                    savedRange = range.cloneRange();
-                }
-            }
-        };
-
-        editor.addEventListener('keyup', storeSelection);
-        editor.addEventListener('mouseup', storeSelection);
-        editor.addEventListener('selectionchange', storeSelection);
-        editor.addEventListener('touchend', storeSelection);
-    }
-
-    async function preloadExternalFonts() {
-        const fontsToLoad = [
+    <script>
+        const customFonts = [
             new FontFace('Kalpurush', "url('https://cdn.jsdelivr.net/gh/ekushey/fonts@main/kalpurush.ttf')"),
             new FontFace('July', "url('https://cdn.jsdelivr.net/gh/lipighor/fonts@main/Li%20Ador%20July%20Unicode.ttf')"),
             new FontFace('UN Bangla', "url('https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/UNBangla-Regular.ttf')")
         ];
 
-        for (const font of fontsToLoad) {
-            try {
-                const loaded = await font.load();
-                document.fonts.add(loaded);
-            } catch (e) {
-                console.warn('Font preload failed:', font.family, e);
-            }
-        }
-    }
-
-    function populateLogoDropdown() {
-        const logoSelect = document.getElementById('logo-select');
-        logoSelect.innerHTML = '';
-        AVAILABLE_LOGOS.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.url;
-            opt.innerText = item.label;
-            logoSelect.appendChild(opt);
-        });
-        if (AVAILABLE_LOGOS.length > 0) {
-            setLogoUrl(AVAILABLE_LOGOS[0].url);
-        }
-    }
-
-    function setLogoUrl(url) {
-        fetchAsDataURL(url).then(dataUrl => {
-            rawLogoDataUrl = dataUrl;
-            applyLogoStyleAndRender();
-        }).catch(() => {
-            rawLogoDataUrl = url;
-            applyLogoStyleAndRender();
-        });
-    }
-
-    function fetchAsDataURL(url) {
-        return fetch(url)
-            .then(res => res.blob())
-            .then(blob => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            }));
-    }
-
-    function onLogoSelectChange(url) {
-        setLogoUrl(url);
-        saveAndSync();
-    }
-
-    function changeLogoVisibility(style) {
-        applyLogoStyleAndRender();
-        saveAndSync();
-    }
-
-    function getAdaptiveShadowFromRGB(r, g, b, isDarkLogo = config.logoIsDark) {
-        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b);
-        const isBrightBg = luminance > 140;
-
-        if (isDarkLogo && isBrightBg) {
-            return `drop-shadow(0px 2px ${config.glowRadius} rgba(255, 255, 255, 0.85))`;
-        } else if (isDarkLogo && !isBrightBg) {
-            return `drop-shadow(0px 2px ${config.glowRadius} rgba(255, 255, 255, 0.5))`;
-        } else {
-            return `drop-shadow(0px 2px ${config.glowRadius} rgba(0, 0, 0, 0.35))`;
-        }
-    }
-
-    function getAdaptiveShadow(dynamicColorHex, isDarkLogo = config.logoIsDark) {
-        const hex = dynamicColorHex.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16) || 0;
-        const g = parseInt(hex.substring(2, 4), 16) || 0;
-        const b = parseInt(hex.substring(4, 6), 16) || 0;
-        return getAdaptiveShadowFromRGB(r, g, b, isDarkLogo);
-    }
-
-    function applyLogoStyleAndRender() {
-        const style = document.getElementById('logo-visibility-select').value;
-        const header = document.getElementById('card-header');
-        const logo = document.getElementById('brand-logo');
-        const backdrop = document.getElementById('logo-backdrop');
-
-        if (!logo) return;
-
-        header.className = 'card-header';
-        logo.className = 'card-logo';
-        logo.style.filter = ''; 
-        backdrop.style.display = 'none';
-
-        if (rawLogoDataUrl) {
-            logo.src = rawLogoDataUrl;
-        }
-
-        if (style === 'auto' && config.isDynamic) {
-            autoDetectAndApplyLogoShadow();
-        } else if (style === 'solid-bg') {
-            header.classList.add('logo-style-solid-bg');
-        } else if (style === 'outline') {
-            header.classList.add('logo-style-outline');
-        } else if (style === 'dark-box') {
-            header.classList.add('logo-style-dark-box');
-        } else if (style === 'light-box') {
-            header.classList.add('logo-style-light-box');
-        } else if (style === 'top-backdrop') {
-            backdrop.style.display = 'block';
-        } else if (style === 'dark-shadow') {
-            logo.classList.add('logo-style-dark-shadow');
-        } else if (style === 'white-glow') {
-            logo.classList.add('logo-style-white-glow');
-        } else if (style === 'none') {
-            logo.classList.add('logo-style-none');
-        }
-    }
-
-    function autoDetectAndApplyLogoShadow() {
-        const logo = document.getElementById('brand-logo');
-        const img = document.getElementById('card-img');
-        const visibility = document.getElementById('logo-visibility-select').value;
-
-        if (visibility !== 'auto' || !logo || !config.isDynamic) return;
-
-        if (!img || !img.src || img.style.display === 'none') {
-            applyAutoShadowByCardBg();
-            return;
-        }
-
-        try {
-            const tempImg = new Image();
-            tempImg.crossOrigin = 'Anonymous';
-            tempImg.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                canvas.width = 100;
-                canvas.height = 100;
-
-                ctx.drawImage(tempImg, 0, 0, 100, 100);
-                const imgData = ctx.getImageData(0, 0, 45, 45);
-                let sumR = 0, sumG = 0, sumB = 0, count = 0;
-
-                for (let i = 0; i < imgData.data.length; i += 4) {
-                    const a = imgData.data[i+3];
-                    if (a > 20) {
-                        sumR += imgData.data[i];
-                        sumG += imgData.data[i+1];
-                        sumB += imgData.data[i+2];
-                        count++;
-                    }
-                }
-
-                const avgR = count > 0 ? (sumR / count) : 128;
-                const avgG = count > 0 ? (sumG / count) : 128;
-                const avgB = count > 0 ? (sumB / count) : 128;
-
-                logo.classList.remove('logo-style-white-glow', 'logo-style-dark-shadow', 'logo-style-none');
-                logo.style.filter = getAdaptiveShadowFromRGB(avgR, avgG, avgB, config.logoIsDark);
-            };
-            tempImg.onerror = function() {
-                applyAutoShadowByCardBg();
-            };
-            tempImg.src = img.src;
-        } catch (e) {
-            applyAutoShadowByCardBg();
-        }
-    }
-
-    function applyAutoShadowByCardBg() {
-        const logo = document.getElementById('brand-logo');
-        const bgColor = document.getElementById('bg-color-picker').value;
-
-        logo.classList.remove('logo-style-white-glow', 'logo-style-dark-shadow', 'logo-style-none');
-        logo.style.filter = getAdaptiveShadow(bgColor, config.logoIsDark);
-    }
-
-    function onUsernameSelectChange(val) {
-        const customBox = document.getElementById('custom-username-box');
-        if (val === 'custom') {
-            customBox.style.display = 'block';
-        } else {
-            customBox.style.display = 'none';
-        }
-        saveAndSync();
-    }
-
-    function getMutedRgb(hex, factor) {
-        let cleanHex = hex.replace('#', '');
-        if (cleanHex.length === 3) {
-            cleanHex = cleanHex.split('').map(c => c + c).join('');
-        }
-        let r = parseInt(cleanHex.substring(0, 2), 16) || 0;
-        let g = parseInt(cleanHex.substring(2, 4), 16) || 0;
-        let b = parseInt(cleanHex.substring(4, 6), 16) || 0;
-
-        return {
-            r: Math.round(r * factor),
-            g: Math.round(g * factor),
-            b: Math.round(b * factor)
-        };
-    }
-
-    function changeTemplate(tplClass) {
-        const card = document.getElementById('photo-card');
-        card.className = `card-frame ${tplClass}`;
-        const currentBg = document.getElementById('bg-color-picker').value;
-        setBgColor(currentBg);
-        setTimeout(autoScaleHeadline, 30);
-        applyLogoStyleAndRender();
-        saveAndSync();
-    }
-
-    function setBgColor(color) {
-        const card = document.getElementById('photo-card');
-        const overlay = document.getElementById('card-overlay');
-        const tpl = document.getElementById('template-select').value;
-        document.getElementById('bg-color-picker').value = color;
-
-        if (tpl === 'tpl-fade') {
-            card.style.backgroundColor = '#000000';
-            const m1 = getMutedRgb(color, 0.45); 
-            const m2 = getMutedRgb(color, 0.15); 
-
-            overlay.style.background = `linear-gradient(
-                to bottom,
-                rgba(${m1.r}, ${m1.g}, ${m1.b}, 0.4) 0%,
-                rgba(0, 0, 0, 0) 30%,
-                rgba(${m1.r}, ${m1.g}, ${m1.b}, 0.85) 75%,
-                rgba(${m2.r}, ${m2.g}, ${m2.b}, 0.98) 100%
-            )`;
-        } else {
-            card.style.backgroundColor = color;
-            overlay.style.background = '';
-        }
-
-        const headlineOut = document.getElementById('card-headline-out');
-        const footerOut = document.querySelector('.card-footer');
-        
-        if (tpl !== 'tpl-fade' && color.toLowerCase() === '#ffffff') {
-            headlineOut.style.color = '#0f172a';
-            footerOut.style.color = '#334155';
-            footerOut.style.borderColor = 'rgba(0,0,0,0.2)';
-        } else {
-            headlineOut.style.color = '#ffffff';
-            footerOut.style.color = 'rgba(255,255,255,0.9)';
-            footerOut.style.borderColor = 'rgba(255,255,255,0.25)';
-        }
-        applyLogoStyleAndRender();
-        saveAndSync();
-    }
-
-    function changeLineHeight(val) {
-        document.getElementById('line-height-val').innerText = val;
-        const editor = document.getElementById('headline-input');
-
-        if (savedRange) {
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(savedRange);
-        }
-
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed) {
-            const range = sel.getRangeAt(0);
-            if (editor.contains(range.commonAncestorContainer)) {
-                let parentSpan = range.commonAncestorContainer;
-                if (parentSpan.nodeType === 3) parentSpan = parentSpan.parentNode;
-
-                if (parentSpan && parentSpan.tagName === 'SPAN' && parentSpan.style.lineHeight) {
-                    parentSpan.style.lineHeight = val;
-                } else {
-                    const span = document.createElement('span');
-                    span.style.lineHeight = val;
-                    try {
-                        const contents = range.extractContents();
-                        span.appendChild(contents);
-                        range.insertNode(span);
-
-                        savedRange = document.createRange();
-                        savedRange.selectNodeContents(span);
-                    } catch(e) {
-                        console.error('Line spacing error:', e);
-                    }
-                }
-            }
-        }
-
-        onHeadlineChange();
-    }
-
-    function handleMultipleImagesUpload(e) {
-        const files = Array.from(e.target.files);
-        if (files.length === 0) return;
-
-        let loadedCount = 0;
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                imagesList.push(event.target.result);
-                loadedCount++;
-                if (loadedCount === files.length) {
-                    selectImage(imagesList.length - 1);
-                    renderGallery();
-                    saveAndSync();
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function renderGallery() {
-        const gallery = document.getElementById('img-gallery');
-        gallery.innerHTML = '';
-        imagesList.forEach((src, idx) => {
-            const img = document.createElement('img');
-            img.src = src;
-            img.className = `img-thumb ${idx === activeImgIndex ? 'active' : ''}`;
-            img.onclick = () => selectImage(idx);
-            gallery.appendChild(img);
-        });
-    }
-
-    function selectImage(index) {
-        if (index < 0 || index >= imagesList.length) return;
-        activeImgIndex = index;
-
-        const img = document.getElementById('card-img');
-        img.src = imagesList[index];
-        img.style.display = 'block';
-
-        imgState.scale = 1;
-        imgState.posX = 0;
-        imgState.posY = 0;
-        document.getElementById('zoom-slider').value = 1;
-        document.getElementById('img-controls').style.display = 'block';
-
-        updateImageTransform();
-        renderGallery();
-        applyLogoStyleAndRender();
-        saveAndSync();
-    }
-
-    function removeActiveImage() {
-        if (activeImgIndex > -1) {
-            imagesList.splice(activeImgIndex, 1);
-            if (imagesList.length > 0) {
-                selectImage(Math.max(0, activeImgIndex - 1));
-            } else {
-                activeImgIndex = -1;
-                const img = document.getElementById('card-img');
-                img.src = '';
-                img.style.display = 'none';
-                document.getElementById('img-controls').style.display = 'none';
-                renderGallery();
-                applyLogoStyleAndRender();
-            }
-            saveAndSync();
-        }
-    }
-
-    function applyPhotoFilters() {
-        imgState.brightness = document.getElementById('brightness-slider').value;
-        imgState.contrast = document.getElementById('contrast-slider').value;
-        imgState.saturate = document.getElementById('saturate-slider').value;
-
-        const img = document.getElementById('card-img');
-        img.style.filter = `brightness(${imgState.brightness}%) contrast(${imgState.contrast}%) saturate(${imgState.saturate}%)`;
-        applyLogoStyleAndRender();
-        saveAndSync();
-    }
-
-    function resetFilters() {
-        document.getElementById('brightness-slider').value = 100;
-        document.getElementById('contrast-slider').value = 100;
-        document.getElementById('saturate-slider').value = 100;
-        applyPhotoFilters();
-    }
-
-    function updateImageTransformFromSlider() {
-        if (activeImgIndex === -1) return;
-        imgState.scale = parseFloat(document.getElementById('zoom-slider').value);
-        updateImageTransform();
-    }
-
-    function updateImageTransform() {
-        if (activeImgIndex === -1) return;
-        const img = document.getElementById('card-img');
-        img.style.transform = `translate(-50%, -50%) translate3d(${imgState.posX}px, ${imgState.posY}px, 0px) scale(${imgState.scale})`;
-        applyLogoStyleAndRender();
-    }
-
-    function setupDragAndPinchEvents() {
-        const layer = document.getElementById('image-layer');
-
-        const startDrag = (x, y) => {
-            if (activeImgIndex === -1) return;
-            imgState.isDragging = true;
-            imgState.startX = x - imgState.posX;
-            imgState.startY = y - imgState.posY;
-        };
-
-        const doDrag = (x, y) => {
-            if (!imgState.isDragging) return;
-            imgState.posX = x - imgState.startX;
-            imgState.posY = y - imgState.startY;
-            updateImageTransform();
-        };
-
-        const stopDrag = () => { 
-            if (imgState.isDragging) {
-                imgState.isDragging = false;
-                saveAndSync();
-            }
-        };
-
-        layer.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
-        window.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
-        window.addEventListener('mouseup', stopDrag);
-
-        layer.addEventListener('touchstart', (e) => {
-            if (activeImgIndex === -1) return;
-
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                touchState.isPinching = true;
-                touchState.initialDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                touchState.initialScale = imgState.scale;
-            } else if (e.touches.length === 1 && !touchState.isPinching) {
-                startDrag(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: false });
-
-        layer.addEventListener('touchmove', (e) => {
-            if (activeImgIndex === -1) return;
-
-            if (e.touches.length === 2 && touchState.isPinching) {
-                e.preventDefault();
-                const dist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                if (touchState.initialDist > 0) {
-                    let newScale = touchState.initialScale * (dist / touchState.initialDist);
-                    newScale = Math.min(Math.max(newScale, 0.05), 3.5);
-                    imgState.scale = newScale;
-                    document.getElementById('zoom-slider').value = newScale;
-                    updateImageTransform();
-                }
-            } else if (e.touches.length === 1 && !touchState.isPinching && imgState.isDragging) {
-                e.preventDefault();
-                doDrag(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: false });
-
-        layer.addEventListener('touchend', (e) => {
-            if (e.touches.length < 2) {
-                touchState.isPinching = false;
-            }
-            stopDrag();
-        });
-    }
-
-    function setTextAlign(align) {
-        currentAlignment = align;
-        document.getElementById('card-headline-out').style.textAlign = align;
-        document.getElementById('headline-input').style.textAlign = align;
-        autoScaleHeadline();
-        saveAndSync();
-    }
-
-    function formatDoc(cmd, value = null) {
-        document.execCommand(cmd, false, value);
-        onHeadlineChange();
-    }
-
-    function applyTextColor(color) {
-        document.execCommand('foreColor', false, color);
-        onHeadlineChange();
-    }
-
-    function applyCustomFontSize(sizeVal) {
-        if (!sizeVal || sizeVal <= 0) return;
-        const formattedSize = sizeVal + 'pt';
-        const editor = document.getElementById('headline-input');
-
-        if (savedRange) {
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(savedRange);
-        }
-
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed && editor.contains(sel.anchorNode)) {
-            const range = sel.getRangeAt(0);
-            const span = document.createElement('span');
-            span.style.fontSize = formattedSize;
-            try {
-                const contents = range.extractContents();
-                span.appendChild(contents);
-                range.insertNode(span);
-
-                savedRange = document.createRange();
-                savedRange.selectNodeContents(span);
-            } catch (e) {
-                console.error("Font size styling error:", e);
-            }
-        } else {
-            editor.style.fontSize = formattedSize;
-            document.getElementById('font-size-num').value = sizeVal;
-        }
-
-        onHeadlineChange();
-    }
-
-    function stepFontSize(delta) {
-        const input = document.getElementById('font-size-num');
-        let current = parseInt(input.value) || 22;
-        current = Math.max(1, current + delta);
-        applyCustomFontSize(current);
-    }
-
-    function autoScaleHeadline() {
-        const headlineOut = document.getElementById('card-headline-out');
-        const wrapper = headlineOut ? headlineOut.closest('.card-headline-wrapper') : null;
-        if (!headlineOut || !wrapper) return;
-
-        headlineOut.style.transform = 'none';
-        headlineOut.style.width = '100%';
-
-        if (currentAlignment === 'center') {
-            headlineOut.style.transformOrigin = 'top center';
-        } else if (currentAlignment === 'right') {
-            headlineOut.style.transformOrigin = 'top right';
-        } else {
-            headlineOut.style.transformOrigin = 'top left';
-        }
-
-        const baseSize = parseFloat(document.getElementById('font-size-num').value) || 22;
-        headlineOut.style.fontSize = baseSize + 'pt';
-
-        const wrapperHeight = wrapper.clientHeight;
-        const headlineHeight = headlineOut.scrollHeight;
-
-        if (headlineHeight > wrapperHeight && wrapperHeight > 0) {
-            const scale = wrapperHeight / headlineHeight;
-            headlineOut.style.transform = `scale(${scale})`;
-            headlineOut.style.width = `${(100 / scale)}%`;
-        }
-    }
-
-    function onHeadlineChange() {
-        const inputElem = document.getElementById('headline-input');
-        const rawText = inputElem.innerText.trim();
-        const placeholder = inputElem.getAttribute('data-placeholder');
-        const cardHeadlineOut = document.getElementById('card-headline-out');
-
-        if (rawText === '') {
-            cardHeadlineOut.innerText = placeholder;
-        } else {
-            cardHeadlineOut.innerHTML = inputElem.innerHTML;
-        }
-        
-        autoScaleHeadline();
-        saveAndSync();
-    }
-
-    function changeFontFamily(font) {
-        document.getElementById('card-headline-out').style.fontFamily = font;
-        document.getElementById('headline-input').style.fontFamily = font;
-        document.getElementById('card-date-out').style.fontFamily = font;
-        setTimeout(autoScaleHeadline, 30);
-        saveAndSync();
-    }
-
-    function uploadCustomFont(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const fontName = 'CustomFont_' + Date.now();
-        const reader = new FileReader();
-
-        reader.onload = function(event) {
-            const fontData = event.target.result;
-            const newFont = new FontFace(fontName, `url(${fontData})`);
-
-            newFont.load().then(loadedFont => {
+        customFonts.forEach(font => {
+            font.load().then(loadedFont => {
                 document.fonts.add(loadedFont);
-                
-                const select = document.getElementById('font-family-select');
-                const opt = document.createElement('option');
-                opt.value = fontName;
-                opt.innerText = file.name.replace(/\.[^/.]+$/, "");
-                select.appendChild(opt);
-                select.value = fontName;
-                changeFontFamily(fontName);
-
-                customFonts.push({ name: fontName, displayName: opt.innerText, data: fontData });
-                renderCustomFontsList();
-                saveAndSync();
-            }).catch(() => alert('ফন্ট ফাইল লোড হতে সমস্যা হয়েছে!'));
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function renderCustomFontsList() {
-        const container = document.getElementById('custom-fonts-list');
-        container.innerHTML = '';
-        customFonts.forEach((f, index) => {
-            const div = document.createElement('div');
-            div.className = 'custom-font-item';
-            div.innerHTML = `
-                <span style="font-size: 9pt;">${f.displayName}</span>
-                <button class="btn-sm-del" onclick="removeCustomFont(${index})">রিমউভ</button>
-            `;
-            container.appendChild(div);
+                renderApp();
+            }).catch(err => console.error("Font loading error:", err));
         });
-    }
 
-    function removeCustomFont(index) {
-        customFonts.splice(index, 1);
-        renderCustomFontsList();
-        saveAndSync();
-        location.reload();
-    }
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
 
-    function getCurrentStateSnapshot() {
-        return {
-            template: document.getElementById('template-select').value,
-            bgColor: document.getElementById('bg-color-picker').value,
-            headline: document.getElementById('headline-input').innerHTML,
-            alignment: currentAlignment,
-            lineHeight: document.getElementById('line-height-slider').value,
-            date: document.getElementById('in-date').value,
-            usernameSelect: document.getElementById('username-select').value,
-            customUsername: document.getElementById('in-username-custom').value,
-            logoUrl: document.getElementById('logo-select').value,
-            logoVisibility: document.getElementById('logo-visibility-select').value,
-            fontSizeNum: document.getElementById('font-size-num').value,
-            fontFamily: document.getElementById('font-family-select').value,
-            customFonts: JSON.parse(JSON.stringify(customFonts)),
-            imagesList: JSON.parse(JSON.stringify(imagesList)),
-            activeImgIndex: activeImgIndex
+        const logoPresets = {
+            karnafuli: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/KN%20stroke.png',
+            deyang: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Deyang%20stroke.png',
+            neosylheti: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Sylheti%20stroke.png',
+            neobservers: 'https://cdn.jsdelivr.net/gh/mhchridoy-ai/KN-photocard-2026@main/Observers%20stroke.png'
         };
-    }
 
-    function saveAndSync() {
-        if (isPerformingUndoRedo) return;
-
-        const dateVal = document.getElementById('in-date').value;
-        const userSelectVal = document.getElementById('username-select').value;
-        const customUserVal = document.getElementById('in-username-custom').value;
+        const LOGO_PADDING = 80;
         
-        let finalUsername = '';
-        if (userSelectVal === 'custom') {
-            finalUsername = customUserVal.startsWith('@') ? customUserVal : '@' + customUserVal;
-        } else {
-            finalUsername = '@' + userSelectVal;
-        }
+        let state = {
+            theme: 'classic_bottom',
+            colorScheme: 'breaking_red',
+            marginPx: 110,
+            showStrip: true,
+            stripColor: '#FFD54F',
+            bgImage: null,
+            showBgImage: true,
+            bgImgPos: { x: 0, y: 0, scale: 1 },
+            headline: 'পড় তোমার প্রভুর নামে যিনি তোমাকে সৃষ্টি করেছেন',
+            fontFamily: "'UN Bangla', sans-serif",
+            textAlign: 'center',
+            isBold: true,
+            isItalic: false,
+            isUnderline: false,
+            fontSize: 150,
+            lineHeight: 170,
+            textColor: '#FFFFFF',
+            highlightColor: 'transparent',
+            logoId: 'karnafuli',
+            customLogo: null,
+            showLogo: true,
+            logoWidth: 460,
+            logoPos: { x: LOGO_PADDING, y: LOGO_PADDING, computedWidth: 460, computedHeight: 230 },
+            handlePreset: 'KarnafuliNewsOnline',
+            handleText: 'KarnafuliNewsOnline',
+            handleColor: '#FFFFFF',
+            dateText: '১৩ সেপ্টেম্বর ২০২৬',
+            dateColor: '#CBD5E1',
+            footerFontSize: 80,
+            extraLayers: [],
+            selectedLayerId: null
+        };
 
-        document.getElementById('card-date-out').innerText = dateVal;
-        document.getElementById('card-username-out').innerText = finalUsername;
+        let headlineChars = [];
 
-        const saveData = getCurrentStateSnapshot();
-
-        const currentStateString = JSON.stringify(saveData);
-        const lastStateString = undoStack.length > 0 ? JSON.stringify(undoStack[undoStack.length - 1]) : null;
-        
-        if (currentStateString !== lastStateString) {
-            undoStack.push(saveData);
-            if (undoStack.length > 30) undoStack.shift();
-            redoStack = [];
-        }
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
-    }
-
-    function applyState(data) {
-        isPerformingUndoRedo = true;
-
-        if (data.template) {
-            document.getElementById('template-select').value = data.template;
-            changeTemplate(data.template);
-        }
-        if (data.bgColor) setBgColor(data.bgColor);
-        if (data.headline) {
-            document.getElementById('headline-input').innerHTML = data.headline;
-            onHeadlineChange();
-        }
-        if (data.alignment) {
-            setTextAlign(data.alignment);
-        }
-        if (data.lineHeight) {
-            document.getElementById('line-height-slider').value = data.lineHeight;
-            document.getElementById('line-height-val').innerText = data.lineHeight;
-        }
-        if (data.date) {
-            document.getElementById('in-date').value = data.date;
-        }
-        if (data.usernameSelect) {
-            document.getElementById('username-select').value = data.usernameSelect;
-            onUsernameSelectChange(data.usernameSelect);
-        }
-        if (data.customUsername) {
-            document.getElementById('in-username-custom').value = data.customUsername;
-        }
-        if (data.logoUrl) {
-            document.getElementById('logo-select').value = data.logoUrl;
-            setLogoUrl(data.logoUrl);
-        }
-        if (data.logoVisibility) {
-            document.getElementById('logo-visibility-select').value = data.logoVisibility;
-            changeLogoVisibility(data.logoVisibility);
-        }
-        if (data.fontSizeNum) {
-            document.getElementById('font-size-num').value = data.fontSizeNum;
-        }
-
-        if (data.imagesList) {
-            imagesList = data.imagesList;
-            if (imagesList.length > 0) {
-                selectImage(data.activeImgIndex >= 0 ? data.activeImgIndex : 0);
-            } else {
-                activeImgIndex = -1;
-                const img = document.getElementById('card-img');
-                img.src = '';
-                img.style.display = 'none';
-                document.getElementById('img-controls').style.display = 'none';
-                renderGallery();
+        function initHeadlineChars() {
+            const val = document.getElementById('headlineInput').value;
+            headlineChars = [];
+            for (let i = 0; i < val.length; i++) {
+                headlineChars.push({
+                    char: val[i],
+                    bold: state.isBold,
+                    italic: state.isItalic,
+                    underline: state.isUnderline,
+                    fontSize: state.fontSize,
+                    color: state.textColor,
+                    highlight: state.highlightColor
+                });
             }
         }
 
-        if (data.fontFamily) {
-            document.getElementById('font-family-select').value = data.fontFamily;
-            changeFontFamily(data.fontFamily);
+        const headlineInput = document.getElementById('headlineInput');
+        headlineInput.addEventListener('input', () => {
+            const val = headlineInput.value;
+            const newChars = [];
+            for (let i = 0; i < val.length; i++) {
+                if (headlineChars[i] && headlineChars[i].char === val[i]) {
+                    newChars.push(headlineChars[i]);
+                } else {
+                    newChars.push({
+                        char: val[i],
+                        bold: state.isBold,
+                        italic: state.isItalic,
+                        underline: state.isUnderline,
+                        fontSize: state.fontSize,
+                        color: state.textColor,
+                        highlight: state.highlightColor
+                    });
+                }
+            }
+            headlineChars = newChars;
+            state.headline = val;
+            renderApp();
+        });
+
+        function applyStyleToSelection(prop, value) {
+            saveHistory();
+            const start = headlineInput.selectionStart;
+            const end = headlineInput.selectionEnd;
+
+            if (start === end) {
+                if (prop === 'bold') state.isBold = !state.isBold;
+                if (prop === 'italic') state.isItalic = !state.isItalic;
+                if (prop === 'underline') state.isUnderline = !state.isUnderline;
+                if (prop === 'color') state.textColor = value;
+                if (prop === 'highlight') state.highlightColor = value;
+                if (prop === 'fontSize') state.fontSize = value;
+
+                headlineChars.forEach(c => {
+                    if (prop === 'bold') c.bold = state.isBold;
+                    else if (prop === 'italic') c.italic = state.isItalic;
+                    else if (prop === 'underline') c.underline = state.isUnderline;
+                    else if (prop === 'color') c.color = value;
+                    else if (prop === 'highlight') c.highlight = value;
+                    else if (prop === 'fontSize') c.fontSize = value;
+                });
+            } else {
+                for (let i = start; i < end; i++) {
+                    if (headlineChars[i]) {
+                        if (prop === 'bold') headlineChars[i].bold = !headlineChars[i].bold;
+                        else if (prop === 'italic') headlineChars[i].italic = !headlineChars[i].italic;
+                        else if (prop === 'underline') headlineChars[i].underline = !headlineChars[i].underline;
+                        else if (prop === 'color') headlineChars[i].color = value;
+                        else if (prop === 'highlight') headlineChars[i].highlight = value;
+                        else if (prop === 'fontSize') headlineChars[i].fontSize = value;
+                    }
+                }
+            }
+
+            renderApp();
+            headlineInput.focus();
+            headlineInput.setSelectionRange(start, end);
         }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        isPerformingUndoRedo = false;
-    }
+        let layerStack = [
+            'bg_image',
+            'template_bg',
+            'template_strip',
+            'headline_text',
+            'logo_image',
+            'footer_handle',
+            'footer_date'
+        ];
 
-    function undoAction() {
-        if (undoStack.length > 1) {
-            const currentState = undoStack.pop();
-            redoStack.push(currentState);
-            const previousState = undoStack[undoStack.length - 1];
-            applyState(previousState);
-        } else {
-            alert('পূর্বের কোনো পরিবর্তন নেই!');
+        let historyStack = [];
+        let redoStack = [];
+
+        function saveHistory() {
+            historyStack.push(JSON.stringify({ state, layerStack, headlineChars }));
+            if (historyStack.length > 30) historyStack.shift();
+            localStorage.setItem('photocard_state_2026', JSON.stringify({ state, layerStack, headlineChars }));
         }
-    }
 
-    function redoAction() {
-        if (redoStack.length > 0) {
-            const nextState = redoStack.pop();
-            undoStack.push(nextState);
-            applyState(nextState);
-        } else {
-            alert('পরবর্তী কোনো পরিবর্তন নেই!');
+        const colorSchemes = {
+            breaking_red: { primary: '#B71C1C', secondary: '#D32F2F', accent: '#FFD54F', text: '#FFFFFF', subtext: '#FFCDD2' },
+            navy_trust: { primary: '#0D47A1', secondary: '#1565C0', accent: '#FFC107', text: '#FFFFFF', subtext: '#BBDEFB' },
+            emerald_green: { primary: '#1B5E20', secondary: '#2E7D32', accent: '#81C784', text: '#FFFFFF', subtext: '#C8E6C9' },
+            dark_gold: { primary: '#121212', secondary: '#1E1E1E', accent: '#D4AF37', text: '#FFFFFF', subtext: '#E0E0E0' },
+            vibrant_orange: { primary: '#E65100', secondary: '#EF6C00', accent: '#FFE082', text: '#FFFFFF', subtext: '#FFE0B2' },
+            teal_modern: { primary: '#004D40', secondary: '#00695C', accent: '#80CBC4', text: '#FFFFFF', subtext: '#B2DFDB' },
+            dark_navy: { primary: '#0f172a', secondary: '#1e293b', accent: '#60a5fa', text: '#FFFFFF', subtext: '#94a3b8' },
+            deep_maroon: { primary: '#660000', secondary: '#880000', accent: '#FFD54F', text: '#FFFFFF', subtext: '#FCA5A5' },
+            media_red: { primary: '#bb1919', secondary: '#d92626', accent: '#FFFFFF', text: '#FFFFFF', subtext: '#FECACA' },
+            solid_black: { primary: '#18181b', secondary: '#27272a', accent: '#E4E4E7', text: '#FFFFFF', subtext: '#A1A1AA' },
+            slate_dark: { primary: '#1e293b', secondary: '#334155', accent: '#38bdf8', text: '#FFFFFF', subtext: '#94a3b8' },
+            deep_green: { primary: '#0f3822', secondary: '#165232', accent: '#4ade80', text: '#FFFFFF', subtext: '#86efac' }
+        };
+
+        function setBgColor(hex) {
+            saveHistory();
+            colorSchemes[state.colorScheme].primary = hex;
+            document.getElementById('bgCustomColorPicker').value = hex;
+            renderApp();
         }
-    }
 
-    function resetMemory() {
-        if (confirm('আপনি কি নিশ্চিত যে সমস্ত মেমোরি রিসেট করে প্রথমবারের মতো ইনপুট ইন্টারফেইস খালি করতে চান?')) {
-            isPerformingUndoRedo = true;
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem('karnafuli_photocard_v11');
+        document.getElementById('bgCustomColorPicker').addEventListener('input', e => {
+            setBgColor(e.target.value);
+        });
+
+        const loadedImages = {};
+
+        function loadImage(url) {
+            return new Promise((resolve) => {
+                if (loadedImages[url]) return resolve(loadedImages[url]);
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    loadedImages[url] = img;
+                    resolve(img);
+                };
+                img.onerror = () => resolve(null);
+                img.src = url;
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        async function renderApp() {
+            ctx.clearRect(0, 0, 2560, 2560);
+            const scheme = colorSchemes[state.colorScheme];
+
+            for (let layerId of layerStack) {
+                if (layerId === 'bg_image' && state.showBgImage && state.bgImage) {
+                    drawBgImage();
+                } else if (layerId === 'template_bg') {
+                    drawTemplateBg(scheme);
+                } else if (layerId === 'template_strip' && state.showStrip) {
+                    drawStrip(scheme);
+                } else if (layerId === 'headline_text') {
+                    drawHeadlineText();
+                } else if (layerId === 'logo_image' && state.showLogo) {
+                    await drawLogo();
+                } else if (layerId === 'footer_handle') {
+                    drawFooterHandle();
+                } else if (layerId === 'footer_date') {
+                    drawFooterDate();
+                } else if (layerId.startsWith('extra_')) {
+                    const extra = state.extraLayers.find(l => l.id === layerId);
+                    if (extra) drawExtraLayer(extra);
+                }
+            }
+
+            if (state.selectedLayerId) {
+                const selLayer = state.extraLayers.find(l => l.id === state.selectedLayerId);
+                if (selLayer) {
+                    const bounds = getLayerBounds(selLayer);
+                    ctx.save();
+                    ctx.strokeStyle = '#2563eb';
+                    ctx.lineWidth = 6;
+                    ctx.setLineDash([16, 8]);
+                    ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
+
+                    ctx.fillStyle = '#2563eb';
+                    ctx.setLineDash([]);
+                    ctx.fillRect(bounds.x + bounds.w - 20, bounds.y + bounds.h - 20, 40, 40);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(bounds.x + bounds.w - 20, bounds.y + bounds.h - 20, 40, 40);
+                    ctx.restore();
+                }
+            }
+
+            updateLayerListUI();
+            updateSelectedLayerPanel();
+        }
+
+        function getLayerBounds(layer) {
+            if (layer.type === 'shape' || layer.type === 'pip') {
+                return { x: layer.x, y: layer.y, w: layer.width || 100, h: layer.height || 100 };
+            } else if (layer.type === 'text') {
+                ctx.save();
+                ctx.font = `${layer.fontSize || 60}px ${state.fontFamily}`;
+                const metrics = ctx.measureText(layer.text || '');
+                ctx.restore();
+                const w = Math.max(metrics.width, 100);
+                const h = (layer.fontSize || 60) * 1.2;
+                return { x: layer.x, y: layer.y - (layer.fontSize || 60), w: w, h: h };
+            }
+            return { x: 0, y: 0, w: 0, h: 0 };
+        }
+
+        function drawTemplateBg(scheme) {
+            ctx.save();
+            const frameMargin = Math.min(Math.max(state.marginPx, 100), 120);
+
+            if (state.theme === 'classic_bottom') {
+                ctx.fillStyle = scheme.primary;
+                ctx.fillRect(0, 1564, 2560, 996);
+            } else if (state.theme === 'curved_modern') {
+                ctx.fillStyle = scheme.primary;
+                ctx.beginPath();
+                ctx.moveTo(0, 1612);
+                ctx.quadraticCurveTo(1280, 1422, 2560, 1612);
+                ctx.lineTo(2560, 2560);
+                ctx.lineTo(0, 2560);
+                ctx.fill();
+            } else if (state.theme === 'full_frame') {
+                ctx.fillStyle = scheme.primary;
+                ctx.fillRect(0, 0, 2560, frameMargin);
+                ctx.fillRect(0, 0, frameMargin, 2560);
+                ctx.fillRect(2560 - frameMargin, 0, frameMargin, 2560);
+                ctx.fillRect(0, 1612, 2560, 948);
+            } else if (state.theme === 'gradient_strip') {
+                const grad = ctx.createLinearGradient(0, 1185, 0, 2560);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(0.3, scheme.primary);
+                grad.addColorStop(1, scheme.secondary);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 1185, 2560, 1375);
+            }
+            ctx.restore();
+        }
+
+        function drawStrip(scheme) {
+            ctx.save();
+            const frameMargin = Math.min(Math.max(state.marginPx, 100), 120);
+            ctx.fillStyle = state.stripColor || scheme.accent;
+            if (state.theme === 'classic_bottom') {
+                ctx.fillRect(0, 1541, 2560, 23);
+            } else if (state.theme === 'curved_modern') {
+                ctx.lineWidth = 19;
+                ctx.strokeStyle = state.stripColor || scheme.accent;
+                ctx.beginPath();
+                ctx.moveTo(0, 1602);
+                ctx.quadraticCurveTo(1280, 1413, 2560, 1602);
+                ctx.stroke();
+            } else if (state.theme === 'gradient_strip') {
+                ctx.fillRect(frameMargin, 1695, 284, 14);
+            }
+            ctx.restore();
+        }
+
+        function drawBgImage() {
+            if (!state.bgImage) return;
+            const img = state.bgImage;
+            ctx.save();
+            const w = img.width * state.bgImgPos.scale;
+            const h = img.height * state.bgImgPos.scale;
+            ctx.drawImage(img, state.bgImgPos.x, state.bgImgPos.y, w, h);
+            ctx.restore();
+        }
+
+        function drawHeadlineText() {
+            ctx.save();
             
-            undoStack = [];
-            redoStack = [];
-            imagesList = [];
-            activeImgIndex = -1;
+            const paddingX = 150; 
+            const paddingTop = 100; 
+            const maxAvailableWidth = 2560 - (2 * paddingX); 
 
-            document.getElementById('headline-input').innerHTML = '';
-            document.getElementById('card-img').src = '';
-            document.getElementById('card-img').style.display = 'none';
-            document.getElementById('img-controls').style.display = 'none';
-            document.getElementById('img-gallery').innerHTML = '';
-            document.getElementById('template-select').value = 'tpl-modern';
-            changeTemplate('tpl-modern');
-            setBgColor('#0f172a');
-            document.getElementById('font-size-num').value = '22';
-            document.getElementById('in-date').value = '১১ সেপ্টেম্বর ২০২৬';
-            document.getElementById('username-select').value = 'KarnafuliNewsOnline';
-            onUsernameSelectChange('KarnafuliNewsOnline');
-            
-            onHeadlineChange();
-            location.reload();
-        }
-    }
+            let overlayTopY = 1564;
+            if (state.theme === 'curved_modern' || state.theme === 'full_frame') {
+                overlayTopY = 1612;
+            } else if (state.theme === 'gradient_strip') {
+                overlayTopY = 1695;
+            }
 
-    function loadSavedData() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) {
-            undoStack.push(getCurrentStateSnapshot());
-            return;
-        }
+            const startY = overlayTopY + paddingTop + (state.fontSize * 0.8);
 
-        try {
-            const data = JSON.parse(saved);
-            undoStack.push(data);
-            applyState(data);
-        } catch (e) {
-            console.error(e);
-            undoStack.push(getCurrentStateSnapshot());
-        }
-    }
+            if (!headlineChars || headlineChars.length === 0) {
+                initHeadlineChars();
+            }
 
-    async function downloadPhotoCard() {
-        const cardNode = document.getElementById('photo-card');
-        
-        if (document.fonts) {
-            await document.fonts.ready;
-        }
-
-        const originalWidth = cardNode.offsetWidth;
-        const targetScale = 2560 / originalWidth;
-
-        try {
-            const canvas = await html2canvas(cardNode, {
-                scale: targetScale,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: null,
-                width: originalWidth,
-                height: originalWidth
+            let rawLines = [[]];
+            headlineChars.forEach(c => {
+                if (c.char === '\n') {
+                    rawLines.push([]);
+                } else {
+                    rawLines[rawLines.length - 1].push(c);
+                }
             });
 
-            const link = document.createElement('a');
-            link.download = `Karnafuli_News_${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
-        } catch (err) {
-            alert('কার্ড প্রস্তুত করতে সমস্যা হয়েছে: ' + err.message);
+            let wrappedLines = [];
+
+            rawLines.forEach(lineChars => {
+                if (lineChars.length === 0) {
+                    wrappedLines.push([]);
+                    return;
+                }
+
+                let words = [];
+                let currentWord = [];
+
+                lineChars.forEach(c => {
+                    if (c.char === ' ') {
+                        if (currentWord.length > 0) {
+                            words.push(currentWord);
+                            currentWord = [];
+                        }
+                        words.push([c]); 
+                    } else {
+                        currentWord.push(c);
+                    }
+                });
+                if (currentWord.length > 0) words.push(currentWord);
+
+                let currentLine = [];
+                let currentLineWidth = 0;
+
+                words.forEach(word => {
+                    let wordWidth = 0;
+                    let runs = [];
+                    word.forEach(c => {
+                        let last = runs[runs.length - 1];
+                        if (last && last.bold === c.bold && last.italic === c.italic &&
+                            last.underline === c.underline && last.fontSize === c.fontSize &&
+                            last.color === c.color && last.highlight === c.highlight) {
+                            last.text += c.char;
+                        } else {
+                            runs.push({
+                                text: c.char,
+                                bold: c.bold,
+                                italic: c.italic,
+                                underline: c.underline,
+                                fontSize: c.fontSize || state.fontSize,
+                                color: c.color || state.textColor,
+                                highlight: c.highlight || state.highlightColor
+                            });
+                        }
+                    });
+
+                    runs.forEach(r => {
+                        let fontStyle = '';
+                        if (r.italic) fontStyle += 'italic ';
+                        if (r.bold) fontStyle += 'bold ';
+                        ctx.font = `${fontStyle}${r.fontSize}px ${state.fontFamily}`;
+                        wordWidth += ctx.measureText(r.text).width;
+                    });
+
+                    if (currentLineWidth + wordWidth > maxAvailableWidth && currentLine.length > 0) {
+                        wrappedLines.push(currentLine);
+                        if (word.length === 1 && word[0].char === ' ') {
+                            currentLine = [];
+                            currentLineWidth = 0;
+                        } else {
+                            currentLine = [...word];
+                            currentLineWidth = wordWidth;
+                        }
+                    } else {
+                        currentLine.push(...word);
+                        currentLineWidth += wordWidth;
+                    }
+                });
+
+                if (currentLine.length > 0) {
+                    wrappedLines.push(currentLine);
+                }
+            });
+
+            wrappedLines.forEach((lineChars, lineIdx) => {
+                if (lineChars.length === 0) return;
+
+                let runs = [];
+                lineChars.forEach(c => {
+                    let last = runs[runs.length - 1];
+                    if (last && last.bold === c.bold && last.italic === c.italic &&
+                        last.underline === c.underline && last.fontSize === c.fontSize &&
+                        last.color === c.color && last.highlight === c.highlight) {
+                        last.text += c.char;
+                    } else {
+                        runs.push({
+                            text: c.char,
+                            bold: c.bold,
+                            italic: c.italic,
+                            underline: c.underline,
+                            fontSize: c.fontSize || state.fontSize,
+                            color: c.color || state.textColor,
+                            highlight: c.highlight || state.highlightColor
+                        });
+                    }
+                });
+
+                let totalLineWidth = 0;
+                runs.forEach(r => {
+                    let fontStyle = '';
+                    if (r.italic) fontStyle += 'italic ';
+                    if (r.bold) fontStyle += 'bold ';
+                    ctx.font = `${fontStyle}${r.fontSize}px ${state.fontFamily}`;
+                    totalLineWidth += ctx.measureText(r.text).width;
+                });
+
+                let lineStartX = paddingX;
+                if (state.textAlign === 'center') {
+                    lineStartX = 1280 - (totalLineWidth / 2);
+                } else if (state.textAlign === 'right') {
+                    lineStartX = (2560 - paddingX) - totalLineWidth;
+                }
+
+                const currentY = startY + (lineIdx * state.lineHeight);
+
+                let currX = lineStartX;
+                runs.forEach(r => {
+                    let fontStyle = '';
+                    if (r.italic) fontStyle += 'italic ';
+                    if (r.bold) fontStyle += 'bold ';
+                    ctx.font = `${fontStyle}${r.fontSize}px ${state.fontFamily}`;
+                    const metrics = ctx.measureText(r.text);
+                    const rWidth = metrics.width;
+
+                    if (r.highlight && r.highlight !== 'transparent') {
+                        ctx.fillStyle = r.highlight;
+                        ctx.fillRect(currX - 4, currentY - r.fontSize + 12, rWidth + 8, r.fontSize + 8);
+                    }
+
+                    ctx.fillStyle = r.color;
+                    ctx.fillText(r.text, currX, currentY);
+
+                    if (r.underline) {
+                        ctx.strokeStyle = r.color;
+                        ctx.lineWidth = Math.max(3, Math.round(r.fontSize / 20));
+                        ctx.beginPath();
+                        ctx.moveTo(currX, currentY + 10);
+                        ctx.lineTo(currX + rWidth, currentY + 10);
+                        ctx.stroke();
+                    }
+
+                    currX += rWidth;
+                });
+            });
+
+            ctx.restore();
         }
-    }
-</script>
+
+        async function drawLogo() {
+            let logoImg = null;
+            if (state.logoId === 'custom' && state.customLogo) {
+                logoImg = state.customLogo;
+            } else if (logoPresets[state.logoId]) {
+                logoImg = await loadImage(logoPresets[state.logoId]);
+            }
+
+            if (logoImg && logoImg.width > 0) {
+                ctx.save();
+                const aspectRatio = logoImg.height / logoImg.width;
+                const targetWidth = state.logoWidth || 460;
+                const targetHeight = targetWidth * aspectRatio;
+
+                state.logoPos.computedWidth = targetWidth;
+                state.logoPos.computedHeight = targetHeight;
+
+                const safeX = Math.max(state.logoPos.x, LOGO_PADDING);
+                const safeY = Math.max(state.logoPos.y, LOGO_PADDING);
+
+                ctx.drawImage(logoImg, safeX, safeY, targetWidth, targetHeight);
+                ctx.restore();
+            }
+        }
+
+        function drawFooterHandle() {
+            ctx.save();
+            const frameMargin = Math.min(Math.max(state.marginPx, 100), 120);
+            const size = state.footerFontSize || 80;
+            ctx.fillStyle = state.handleColor;
+            ctx.font = `bold ${size}px ${state.fontFamily}`;
+            ctx.textAlign = 'right';
+            ctx.fillText('@' + state.handleText, 2560 - frameMargin, 2430);
+            ctx.restore();
+        }
+
+        function drawFooterDate() {
+            ctx.save();
+            const frameMargin = Math.min(Math.max(state.marginPx, 100), 120);
+            const size = state.footerFontSize || 80;
+            ctx.fillStyle = state.dateColor;
+            ctx.font = `${size}px ${state.fontFamily}`;
+            ctx.textAlign = 'left';
+            ctx.fillText(state.dateText, frameMargin, 2430);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(frameMargin, 2330);
+            ctx.lineTo(2560 - frameMargin, 2330);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawExtraLayer(layer) {
+            ctx.save();
+            if (layer.type === 'text') {
+                ctx.font = `${layer.fontSize}px ${state.fontFamily}`;
+                ctx.fillStyle = layer.color;
+                ctx.textBaseline = 'alphabetical';
+                ctx.fillText(layer.text, layer.x, layer.y);
+            } else if (layer.type === 'shape') {
+                ctx.fillStyle = layer.color;
+                ctx.fillRect(layer.x, layer.y, layer.width, layer.height);
+            } else if (layer.type === 'pip' && layer.img) {
+                ctx.drawImage(layer.img, layer.x, layer.y, layer.width, layer.height);
+            }
+            ctx.restore();
+        }
+
+        function updateLayerListUI() {
+            const container = document.getElementById('layerListContainer');
+            container.innerHTML = '';
+
+            layerStack.slice().reverse().forEach((layerId) => {
+                const item = document.createElement('div');
+                item.className = 'layer-item' + (state.selectedLayerId === layerId ? ' selected' : '');
+                item.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        state.selectedLayerId = layerId.startsWith('extra_') ? layerId : null;
+                        renderApp();
+                    }
+                };
+                item.innerHTML = `
+                    <span>${layerId}</span>
+                    <div class="layer-controls">
+                        <button class="btn-small" onclick="moveLayer('${layerId}', 'up')">▲</button>
+                        <button class="btn-small" onclick="moveLayer('${layerId}', 'down')">▼</button>
+                        ${layerId.startsWith('extra_') ? `<button class="btn-small" onclick="deleteLayer('${layerId}')">✕</button>` : ''}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function updateSelectedLayerPanel() {
+            const panel = document.getElementById('selectedLayerEditPanel');
+            const title = document.getElementById('selectedLayerTitle');
+            const controls = document.getElementById('selectedLayerControls');
+
+            if (!state.selectedLayerId) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            const layer = state.extraLayers.find(l => l.id === state.selectedLayerId);
+            if (!layer) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = 'flex';
+            title.innerText = `এডিটিং: ${layer.id} (${layer.type.toUpperCase()})`;
+            controls.innerHTML = '';
+
+            if (layer.type === 'text') {
+                controls.innerHTML = `
+                    <div class="form-group">
+                        <label>টেক্সট:</label>
+                        <input type="text" value="${layer.text}" oninput="updateExtraLayerProperty('${layer.id}', 'text', this.value)">
+                    </div>
+                    <div class="form-row">
+                        <label>সাইজ:</label>
+                        <input type="number" value="${layer.fontSize}" style="width: 80px;" oninput="updateExtraLayerProperty('${layer.id}', 'fontSize', parseInt(this.value)||30)">
+                        <label>কালার:</label>
+                        <input type="color" value="${layer.color}" oninput="updateExtraLayerProperty('${layer.id}', 'color', this.value)">
+                    </div>
+                `;
+            } else if (layer.type === 'shape') {
+                controls.innerHTML = `
+                    <div class="form-row">
+                        <label>Width:</label>
+                        <input type="number" value="${layer.width}" style="width: 80px;" oninput="updateExtraLayerProperty('${layer.id}', 'width', parseInt(this.value)||50)">
+                        <label>Height:</label>
+                        <input type="number" value="${layer.height}" style="width: 80px;" oninput="updateExtraLayerProperty('${layer.id}', 'height', parseInt(this.value)||50)">
+                    </div>
+                    <div class="form-row">
+                        <label>কালার:</label>
+                        <input type="color" value="${layer.color}" oninput="updateExtraLayerProperty('${layer.id}', 'color', this.value)">
+                    </div>
+                `;
+            } else if (layer.type === 'pip') {
+                controls.innerHTML = `
+                    <div class="form-row">
+                        <label>Width:</label>
+                        <input type="number" value="${layer.width}" style="width: 80px;" oninput="updateExtraLayerProperty('${layer.id}', 'width', parseInt(this.value)||50)">
+                        <label>Height:</label>
+                        <input type="number" value="${layer.height}" style="width: 80px;" oninput="updateExtraLayerProperty('${layer.id}', 'height', parseInt(this.value)||50)">
+                    </div>
+                `;
+            }
+        }
+
+        function updateExtraLayerProperty(id, prop, value) {
+            const layer = state.extraLayers.find(l => l.id === id);
+            if (layer) {
+                layer[prop] = value;
+                renderApp();
+            }
+        }
+
+        function moveLayer(layerId, dir) {
+            saveHistory();
+            const index = layerStack.indexOf(layerId);
+            if (dir === 'up' && index < layerStack.length - 1) {
+                const temp = layerStack[index];
+                layerStack[index] = layerStack[index + 1];
+                layerStack[index + 1] = temp;
+            } else if (dir === 'down' && index > 0) {
+                const temp = layerStack[index];
+                layerStack[index] = layerStack[index - 1];
+                layerStack[index - 1] = temp;
+            }
+            renderApp();
+        }
+
+        function deleteLayer(layerId) {
+            saveHistory();
+            layerStack = layerStack.filter(id => id !== layerId);
+            state.extraLayers = state.extraLayers.filter(l => l.id !== layerId);
+            if (state.selectedLayerId === layerId) state.selectedLayerId = null;
+            renderApp();
+        }
+
+        document.getElementById('themeSelect').addEventListener('change', e => { saveHistory(); state.theme = e.target.value; renderApp(); });
+        document.getElementById('colorSelect').addEventListener('change', e => { saveHistory(); state.colorScheme = e.target.value; renderApp(); });
+        document.getElementById('showStrip').addEventListener('change', e => { saveHistory(); state.showStrip = e.target.checked; renderApp(); });
+        
+        document.getElementById('stripColorPreset').addEventListener('change', e => {
+            saveHistory();
+            if (e.target.value !== 'custom') state.stripColor = e.target.value;
+            else state.stripColor = document.getElementById('stripCustomColor').value;
+            renderApp();
+        });
+        document.getElementById('stripCustomColor').addEventListener('input', e => {
+            saveHistory();
+            state.stripColor = e.target.value;
+            document.getElementById('stripColorPreset').value = 'custom';
+            renderApp();
+        });
+
+        document.getElementById('bgImageInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const img = new Image();
+                    img.onload = () => {
+                        saveHistory();
+                        state.bgImage = img;
+                        const initialScale = (2560 / img.width);
+                        state.bgImgPos = { x: 0, y: 0, scale: initialScale };
+                        document.getElementById('bgZoomInput').value = initialScale.toFixed(2);
+                        document.getElementById('bgZoomVal').innerText = Math.round(initialScale * 100) + '%';
+                        renderApp();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('bgZoomInput').addEventListener('input', e => {
+            const scaleVal = parseFloat(e.target.value);
+            state.bgImgPos.scale = scaleVal;
+            document.getElementById('bgZoomVal').innerText = Math.round(scaleVal * 100) + '%';
+            renderApp();
+        });
+        document.getElementById('bgZoomInput').addEventListener('change', () => saveHistory());
+
+        document.getElementById('showBgImage').addEventListener('change', e => { saveHistory(); state.showBgImage = e.target.checked; renderApp(); });
+        document.getElementById('removeBgImageBtn').addEventListener('click', () => { saveHistory(); state.bgImage = null; renderApp(); });
+
+        document.getElementById('font-family-select').addEventListener('change', e => { saveHistory(); state.fontFamily = e.target.value; renderApp(); });
+        document.getElementById('fontSizeInput').addEventListener('input', e => { applyStyleToSelection('fontSize', parseInt(e.target.value) || 150); });
+        document.getElementById('lineHeightInput').addEventListener('input', e => { saveHistory(); state.lineHeight = parseInt(e.target.value) || 170; renderApp(); });
+
+        function setTextAlign(align) { saveHistory(); state.textAlign = align; renderApp(); }
+
+        document.getElementById('customFontInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async event => {
+                    const fontName = 'CustomFont_' + Date.now();
+                    const font = new FontFace(fontName, event.target.result);
+                    await font.load();
+                    document.fonts.add(font);
+                    state.fontFamily = fontName;
+                    saveHistory();
+                    renderApp();
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        document.getElementById('logoSelect').addEventListener('change', e => {
+            saveHistory();
+            state.logoId = e.target.value;
+            document.getElementById('customLogoGroup').style.display = e.target.value === 'custom' ? 'block' : 'none';
+            renderApp();
+        });
+        document.getElementById('customLogoInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const img = new Image();
+                    img.onload = () => {
+                        saveHistory();
+                        state.customLogo = img;
+                        renderApp();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        document.getElementById('logoWidthInput').addEventListener('input', e => {
+            saveHistory();
+            state.logoWidth = parseInt(e.target.value) || 460;
+            renderApp();
+        });
+        document.getElementById('showLogo').addEventListener('change', e => { saveHistory(); state.showLogo = e.target.checked; renderApp(); });
+        document.getElementById('resetLogoPosBtn').addEventListener('click', () => { 
+            saveHistory(); 
+            state.logoWidth = 460;
+            state.logoPos.x = LOGO_PADDING;
+            state.logoPos.y = LOGO_PADDING;
+            document.getElementById('logoWidthInput').value = 460;
+            renderApp(); 
+        });
+
+        document.getElementById('handlePresetSelect').addEventListener('change', e => {
+            saveHistory();
+            state.handlePreset = e.target.value;
+            state.handleText = e.target.value;
+            document.getElementById('handleInput').value = e.target.value;
+            renderApp();
+        });
+        document.getElementById('handleInput').addEventListener('input', e => { state.handleText = e.target.value; renderApp(); });
+        document.getElementById('handleColorInput').addEventListener('input', e => { state.handleColor = e.target.value; renderApp(); });
+        document.getElementById('dateInput').addEventListener('input', e => { state.dateText = e.target.value; renderApp(); });
+        document.getElementById('dateColorInput').addEventListener('input', e => { state.dateColor = e.target.value; renderApp(); });
+        
+        document.getElementById('footerFontSizeInput').addEventListener('input', e => { 
+            saveHistory(); 
+            state.footerFontSize = parseInt(e.target.value) || 80; 
+            renderApp(); 
+        });
+
+        document.getElementById('marginPx').addEventListener('input', e => {
+            let px = parseInt(e.target.value) || 110;
+            if (px > 120) px = 120;
+            state.marginPx = px;
+            document.getElementById('marginMm').value = (px * 0.264583).toFixed(1);
+            renderApp();
+        });
+        document.getElementById('marginMm').addEventListener('input', e => {
+            const mm = parseFloat(e.target.value) || 29.1;
+            let px = Math.round(mm / 0.264583);
+            if (px > 120) px = 120;
+            state.marginPx = px;
+            document.getElementById('marginPx').value = state.marginPx;
+            renderApp();
+        });
+
+        document.getElementById('addTextLayerBtn').addEventListener('click', () => {
+            saveHistory();
+            const id = 'extra_text_' + Date.now();
+            state.extraLayers.push({ id, type: 'text', text: 'কাস্টম টেক্সট লিখুন', x: 800, y: 1000, fontSize: 75, color: '#FFFFFF' });
+            layerStack.push(id);
+            state.selectedLayerId = id;
+            renderApp();
+        });
+        document.getElementById('addShapeLayerBtn').addEventListener('click', () => {
+            saveHistory();
+            const id = 'extra_shape_' + Date.now();
+            state.extraLayers.push({ id, type: 'shape', x: 600, y: 600, width: 400, height: 250, color: '#FF0000' });
+            layerStack.push(id);
+            state.selectedLayerId = id;
+            renderApp();
+        });
+        document.getElementById('addPipLayerBtn').addEventListener('click', () => {
+            document.getElementById('pipFileInput').click();
+        });
+        document.getElementById('pipFileInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const img = new Image();
+                    img.onload = () => {
+                        saveHistory();
+                        const id = 'extra_pip_' + Date.now();
+                        state.extraLayers.push({ id, type: 'pip', img, x: 700, y: 700, width: 500, height: 500 });
+                        layerStack.push(id);
+                        state.selectedLayerId = id;
+                        renderApp();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        const canvasContainer = document.getElementById('canvasContainer');
+        canvasContainer.addEventListener('wheel', e => {
+            if (!state.bgImage || !state.showBgImage) return;
+            e.preventDefault();
+            const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
+            const newScale = Math.max(0.1, Math.min(4, state.bgImgPos.scale * zoomFactor));
+            state.bgImgPos.scale = newScale;
+            document.getElementById('bgZoomInput').value = newScale.toFixed(2);
+            document.getElementById('bgZoomVal').innerText = Math.round(newScale * 100) + '%';
+            renderApp();
+        }, { passive: false });
+
+        let isDragging = false;
+        let dragTarget = null;
+        let startX, startY, startW, startH, startFontSize;
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: (clientX - rect.left) * (2560 / rect.width),
+                y: (clientY - rect.top) * (2560 / rect.height)
+            };
+        }
+
+        canvasContainer.addEventListener('mousedown', startDrag);
+        canvasContainer.addEventListener('touchstart', startDrag);
+        window.addEventListener('mousemove', doDrag);
+        window.addEventListener('touchmove', doDrag);
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            const pos = getCanvasCoords(e);
+
+            if (state.selectedLayerId) {
+                const selLayer = state.extraLayers.find(l => l.id === state.selectedLayerId);
+                if (selLayer) {
+                    const bounds = getLayerBounds(selLayer);
+                    const handleAreaX = bounds.x + bounds.w - 30;
+                    const handleAreaY = bounds.y + bounds.h - 30;
+                    if (pos.x >= handleAreaX && pos.x <= bounds.x + bounds.w + 30 &&
+                        pos.y >= handleAreaY && pos.y <= bounds.y + bounds.h + 30) {
+                        isDragging = true;
+                        dragTarget = 'resize_extra';
+                        startX = pos.x;
+                        startY = pos.y;
+                        startW = bounds.w;
+                        startH = bounds.h;
+                        startFontSize = selLayer.fontSize || 60;
+                        return;
+                    }
+                }
+            }
+
+            for (let i = layerStack.length - 1; i >= 0; i--) {
+                const layerId = layerStack[i];
+                if (layerId.startsWith('extra_')) {
+                    const layer = state.extraLayers.find(l => l.id === layerId);
+                    if (layer) {
+                        const bounds = getLayerBounds(layer);
+                        if (pos.x >= bounds.x && pos.x <= bounds.x + bounds.w &&
+                            pos.y >= bounds.y && pos.y <= bounds.y + bounds.h) {
+                            isDragging = true;
+                            dragTarget = layer;
+                            state.selectedLayerId = layer.id;
+                            startX = pos.x - layer.x;
+                            startY = pos.y - layer.y;
+                            renderApp();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            const logoW = state.logoPos.computedWidth || state.logoWidth;
+            const logoH = state.logoPos.computedHeight || 200;
+
+            if (state.showLogo && pos.x >= state.logoPos.x && pos.x <= state.logoPos.x + logoW &&
+                pos.y >= state.logoPos.y && pos.y <= state.logoPos.y + logoH) {
+                isDragging = true;
+                dragTarget = 'logo';
+                state.selectedLayerId = null;
+                startX = pos.x - state.logoPos.x;
+                startY = pos.y - state.logoPos.y;
+                renderApp();
+                return;
+            }
+
+            if (state.bgImage && state.showBgImage) {
+                isDragging = true;
+                dragTarget = 'bgImage';
+                state.selectedLayerId = null;
+                startX = pos.x - state.bgImgPos.x;
+                startY = pos.y - state.bgImgPos.y;
+                renderApp();
+                return;
+            }
+
+            state.selectedLayerId = null;
+            renderApp();
+        }
+
+        function doDrag(e) {
+            if (!isDragging) return;
+            const pos = getCanvasCoords(e);
+
+            if (dragTarget === 'resize_extra') {
+                const selLayer = state.extraLayers.find(l => l.id === state.selectedLayerId);
+                if (selLayer) {
+                    const dx = pos.x - startX;
+                    const dy = pos.y - startY;
+                    if (selLayer.type === 'shape' || selLayer.type === 'pip') {
+                        selLayer.width = Math.max(30, Math.round(startW + dx));
+                        selLayer.height = Math.max(30, Math.round(startH + dy));
+                    } else if (selLayer.type === 'text') {
+                        const scaleFactor = Math.max(0.2, (startW + dx) / startW);
+                        selLayer.fontSize = Math.max(16, Math.round(startFontSize * scaleFactor));
+                    }
+                    renderApp();
+                }
+            } else if (typeof dragTarget === 'object' && dragTarget !== null) {
+                dragTarget.x = pos.x - startX;
+                dragTarget.y = pos.y - startY;
+                renderApp();
+            } else if (dragTarget === 'logo') {
+                let newX = pos.x - startX;
+                let newY = pos.y - startY;
+
+                const logoW = state.logoPos.computedWidth || state.logoWidth;
+                if (Math.abs(newX - LOGO_PADDING) < 20) newX = LOGO_PADDING;
+                if (Math.abs(newX - (1280 - logoW / 2)) < 20) newX = 1280 - logoW / 2;
+                if (Math.abs(newY - LOGO_PADDING) < 20) newY = LOGO_PADDING;
+
+                state.logoPos.x = newX;
+                state.logoPos.y = newY;
+                renderApp();
+            } else if (dragTarget === 'bgImage') {
+                state.bgImgPos.x = pos.x - startX;
+                state.bgImgPos.y = pos.y - startY;
+                renderApp();
+            }
+        }
+
+        function endDrag() {
+            if (isDragging) saveHistory();
+            isDragging = false;
+            dragTarget = null;
+        }
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (historyStack.length > 0) {
+                redoStack.push(JSON.stringify({ state, layerStack, headlineChars }));
+                const prev = JSON.parse(historyStack.pop());
+                state = prev.state;
+                layerStack = prev.layerStack;
+                headlineChars = prev.headlineChars || [];
+                document.getElementById('headlineInput').value = state.headline;
+                document.getElementById('fontSizeInput').value = state.fontSize;
+                document.getElementById('lineHeightInput').value = state.lineHeight;
+                document.getElementById('font-family-select').value = state.fontFamily;
+                document.getElementById('bgZoomInput').value = state.bgImgPos.scale;
+                document.getElementById('bgZoomVal').innerText = Math.round(state.bgImgPos.scale * 100) + '%';
+                renderApp();
+            }
+        });
+
+        document.getElementById('redoBtn').addEventListener('click', () => {
+            if (redoStack.length > 0) {
+                historyStack.push(JSON.stringify({ state, layerStack, headlineChars }));
+                const next = JSON.parse(redoStack.pop());
+                state = next.state;
+                layerStack = next.layerStack;
+                headlineChars = next.headlineChars || [];
+                document.getElementById('headlineInput').value = state.headline;
+                document.getElementById('fontSizeInput').value = state.fontSize;
+                document.getElementById('lineHeightInput').value = state.lineHeight;
+                document.getElementById('font-family-select').value = state.fontFamily;
+                document.getElementById('bgZoomInput').value = state.bgImgPos.scale;
+                document.getElementById('bgZoomVal').innerText = Math.round((state.bgImgPos.scale || 1) * 100) + '%';
+                renderApp();
+            }
+        });
+
+        document.getElementById('resetMemoryBtn').addEventListener('click', () => {
+            if (confirm("আপনি কি নিশ্চিত যে সমস্ত মেমোরি ক্লিয়ার করে ডিফল্ট সেটিংসে ফিরতে চান?")) {
+                localStorage.removeItem('photocard_state_2026');
+                location.reload();
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initHeadlineChars();
+            const saved = localStorage.getItem('photocard_state_2026');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed.state };
+                    layerStack = parsed.layerStack || layerStack;
+                    headlineChars = parsed.headlineChars || headlineChars;
+                    document.getElementById('headlineInput').value = state.headline;
+                    document.getElementById('fontSizeInput').value = state.fontSize || 150;
+                    document.getElementById('lineHeightInput').value = state.lineHeight || 170;
+                    document.getElementById('font-family-select').value = state.fontFamily || "'UN Bangla', sans-serif";
+                    document.getElementById('bgZoomInput').value = state.bgImgPos.scale || 1;
+                    document.getElementById('bgZoomVal').innerText = Math.round((state.bgImgPos.scale || 1) * 100) + '%';
+                } catch(e) {}
+            }
+            renderApp();
+        });
+
+        document.getElementById('downloadSingleBtn').addEventListener('click', async () => {
+            const prevSelected = state.selectedLayerId;
+            state.selectedLayerId = null;
+            await renderApp();
+
+            const link = document.createElement('a');
+            link.download = `photocard_${state.theme}_${state.colorScheme}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            state.selectedLayerId = prevSelected;
+            renderApp();
+        });
+
+        document.getElementById('downloadBatchBtn').addEventListener('click', async () => {
+            if (typeof JSZip === 'undefined') return alert('ZIP লাইব্রেরি লোড হয়নি!');
+            const prevSelected = state.selectedLayerId;
+            state.selectedLayerId = null;
+
+            const zip = new JSZip();
+            const currentTheme = state.theme;
+            const originalColor = state.colorScheme;
+
+            for (let colorKey of Object.keys(colorSchemes)) {
+                state.colorScheme = colorKey;
+                await renderApp();
+                const dataUrl = canvas.toDataURL('image/png');
+                zip.file(`photocard_${currentTheme}_${colorKey}.png`, dataUrl.split(',')[1], { base64: true });
+            }
+
+            state.colorScheme = originalColor;
+            state.selectedLayerId = prevSelected;
+            renderApp();
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `photocard_${currentTheme}_all_colors.zip`;
+            link.click();
+        });
+    </script>
 </body>
 </html>
-/Developed by MHC Hridoy
+
+/Designed by MHC Hridoy
